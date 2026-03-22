@@ -10,29 +10,23 @@
         .app-container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
         .header { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
         .score-label { font-size: 1.1rem; color: #444; margin-top: 20px; }
-        .score-value { font-size: 4.5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
+        .score-value { font-size: 5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
         .btn { width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
-        
-        /* Graph Container */
         .chart-container { margin-top: 30px; padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #eee; display: none; }
-        
-        /* Modal Styles */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
         .question-text { font-size: 1.1rem; color: #202124; line-height: 1.5; margin-bottom: 25px; font-weight: 500; }
         .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; }
-        .sim-tag { background: #fee; color: #c00; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="sim-tag">Test Mode: 1 Minute = 1 Day</div>
     <div class="header" id="display-date">--</div>
     
-    <div class="score-label">Current SAT Score</div>
+    <div class="score-label">Current Estimated SAT Score</div>
     <div id="sat-score" class="score-value">1400</div>
     
     <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
@@ -55,47 +49,65 @@
 </div>
 
 <script>
+    // --- Official Data State ---
     let state = {
         score: 1400,
-        lastUpdateMinute: new Date().getMinutes(),
+        lastUpdateDay: new Date().toDateString(), // Store as "Sun Mar 22 2026"
         didCheckIn: false,
-        history: [{time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), score: 1400}]
+        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1400}]
     };
 
     let chartInstance = null;
 
     function loadData() {
-        const saved = localStorage.getItem('satTrackerStateV2');
+        const saved = localStorage.getItem('satTracker_Mason_Official');
         if (saved) {
             state = JSON.parse(saved);
-            checkTimeGap();
+            checkDailyGap();
         }
         updateUI();
     }
 
     function saveData() {
-        localStorage.setItem('satTrackerStateV2', JSON.stringify(state));
+        localStorage.setItem('satTracker_Mason_Official', JSON.stringify(state));
     }
 
-    function checkTimeGap() {
-        const now = new Date();
-        const currentMin = now.getMinutes();
+    // --- Daily Penalty Logic ---
+    function checkDailyGap() {
+        const todayStr = new Date().toDateString();
         
-        if (currentMin !== state.lastUpdateMinute) {
-            let gap = currentMin - state.lastUpdateMinute;
-            if (gap < 0) gap += 60;
+        if (todayStr !== state.lastUpdateDay) {
+            const lastDate = new Date(state.lastUpdateDay);
+            const todayDate = new Date(todayStr);
+            const diffTime = Math.abs(todayDate - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (!state.didCheckIn) {
-                state.score -= (gap * 4);
-                // Record history for each missed minute
-                for(let i=1; i<=gap; i++) {
+            if (diffDays >= 1) {
+                // If yesterday was skipped
+                if (!state.didCheckIn) {
+                    // Penalty for the first skipped day
+                    state.score -= 4;
                     state.history.push({
-                        time: `Min ${ (state.lastUpdateMinute + i) % 60 }`,
-                        score: state.score + (gap-i)*4 - 4
+                        date: lastDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+                        score: state.score
                     });
                 }
+                
+                // If multiple days were skipped
+                if (diffDays > 1) {
+                    for(let i=1; i < diffDays; i++) {
+                        state.score -= 4;
+                        let missingDate = new Date(lastDate);
+                        missingDate.setDate(lastDate.getDate() + i);
+                        state.history.push({
+                            date: missingDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+                            score: state.score
+                        });
+                    }
+                }
             }
-            state.lastUpdateMinute = currentMin;
+
+            state.lastUpdateDay = todayStr;
             state.didCheckIn = false;
             saveData();
             updateUI();
@@ -112,7 +124,7 @@
     };
 
     function startPrep() {
-        if (state.didCheckIn) return alert("Already updated for this 'minute'!");
+        if (state.didCheckIn) return alert("You've already updated your score for today!");
         currentStep = 1; sessionPoints = 0;
         showQuestion();
         document.getElementById('prepModal').style.display = 'flex';
@@ -124,10 +136,10 @@
     }
 
     function handleChoice(isYes) {
-        if (currentStep % 2 !== 0) { // Q1 or Q3
+        if (currentStep % 2 !== 0) {
             if (isYes) { sessionPoints += 1; currentStep++; } 
             else { currentStep += 2; }
-        } else { // Q2 or Q4
+        } else {
             if (isYes) sessionPoints += 1;
             currentStep++;
         }
@@ -139,7 +151,7 @@
         state.score += sessionPoints;
         state.didCheckIn = true;
         state.history.push({
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
             score: state.score
         });
         saveData();
@@ -150,54 +162,40 @@
 
     function updateUI() {
         document.getElementById('sat-score').innerText = state.score;
-        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
     function toggleHistory() {
         const section = document.getElementById('history-section');
-        if (section.style.display === 'none' || section.style.display === '') {
-            section.style.display = 'block';
-            initChart();
-        } else {
-            section.style.display = 'none';
-        }
+        section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
+        if (section.style.display === 'block') initChart();
     }
 
     function initChart() {
         const ctx = document.getElementById('scoreChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: state.history.map(h => h.time),
+                labels: state.history.map(h => h.date),
                 datasets: [{
-                    label: 'SAT Prediction',
+                    label: 'Score Trend',
                     data: state.history.map(h => h.score),
-                    borderColor: '#e74c3c', // Red Line
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderColor: '#e74c3c',
                     borderWidth: 3,
                     tension: 0.3,
-                    fill: true
+                    fill: false
                 }]
             },
             options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: false, suggestedMin: 1300, suggestedMax: 1600 }
-                }
+                scales: { y: { suggestedMin: 1350, suggestedMax: 1550 } }
             }
         });
     }
 
-    function updateChart() {
-        chartInstance.data.labels = state.history.map(h => h.time);
-        chartInstance.data.datasets[0].data = state.history.map(h => h.score);
-        chartInstance.update();
-    }
-
     window.onload = loadData;
-    setInterval(checkTimeGap, 1000);
+    // Check for day change every hour while app might be open in a tab
+    setInterval(checkDailyGap, 1000 * 60 * 60);
 </script>
 </body>
 </html>
