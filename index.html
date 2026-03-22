@@ -196,6 +196,57 @@
     window.onload = loadData;
     // Check for day change every hour while app might be open in a tab
     setInterval(checkDailyGap, 1000 * 60 * 60);
+    // Top 20 Predictor Logic (v1.2.0)
+function calculateTop20Score() {
+    let score = 0;
+    const currentSAT = parseFloat(localStorage.getItem('currentScore')) || 1400;
+
+    // 1. Academic Foundation (Max 55+)
+    if (currentSAT >= 1550) score += 20;
+    else if (currentSAT >= 1500) score += 15;
+
+    const gpa = document.querySelector('input[name="gpa"]:checked')?.value;
+    if (gpa === "3.9") score += 20;
+    else if (gpa === "3.7") score += 15;
+
+    const apCount = parseInt(document.getElementById('ap-count').value) || 0;
+    score += (apCount * 2.5);
+
+    // 2. Passion Projects (Max 80)
+    score += parseInt(document.querySelector('input[name="soundbuddy"]:checked')?.value || 0);
+    score += parseInt(document.querySelector('input[name="jazz"]:checked')?.value || 0);
+
+    // 3. Human Network & Story (Max 70)
+    score += parseInt(document.querySelector('input[name="essay"]:checked')?.value || 0);
+    score += parseInt(document.querySelector('input[name="recs"]:checked')?.value || 0);
+
+    displayResult(score);
+}
+
+function displayResult(totalScore) {
+    let rank = "";
+    let message = "";
+
+    if (totalScore >= 180) {
+        rank = "THE CHOSEN ONE";
+        message = "The universities don't choose you; YOU choose the university.";
+    } else if (totalScore >= 150) {
+        rank = "IVY LEAGUE TIER";
+        message = "Highly competitive. One more 'National' hook will lock your seat.";
+    } else if (totalScore >= 100) {
+        rank = "COMPETITIVE BLUE";
+        message = "Solid standing, but you need a stronger 'Hook' to stand out.";
+    } else {
+        rank = "THE GROUNDWORK";
+        message = "Focus on your SAT (1550+) and GPA (3.9+) first.";
+    }
+
+    document.getElementById('result-area').innerHTML = `
+        <h3>Total Score: ${totalScore}</h3>
+        <h2 style="color: #ffd700;">${rank}</h2>
+        <p>${message}</p>
+    `;
+}
 </script>
 </body>
 </html>
