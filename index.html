@@ -23,7 +23,7 @@
         .input-item { text-align: left; margin-bottom: 15px; }
         label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
         select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
-        #result-box { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; }
+        #result-box { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; text-align: center; }
         .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; }
     </style>
 </head>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="predictor-card">
-    <h2 style="color: #1e3a8a; margin-top: 0;">🏛️ Top 20 Predictor</h2>
+    <h2 style="color: #1e3a8a; margin-top: 0; text-align: center;">🏛️ Top 20 Predictor</h2>
     <div class="input-item">
         <label>GPA (Unweighted)</label>
         <select id="p-gpa"><option value="20">3.9+ (+20)</option><option value="15">3.7-3.89 (+15)</option><option value="0">Below 3.7 (+0)</option></select>
@@ -54,15 +54,40 @@
     </div>
     <div class="input-item">
         <label>SoundBuddy Project</label>
-        <select id="p-project"><option value="50">National Award (+50)</option><option value="35">State Award (+35)</option><option value="20">Regional Award (+20)</option><option value="10">Development (+10)</option></select>
+        <select id="p-project">
+            <option value="50">National Award (+50)</option>
+            <option value="35">State Award (+35)</option>
+            <option value="20">Regional Award (+20)</option>
+            <option value="10">Development Started (+10)</option>
+            <option value="0">No Project / Not Started (+0)</option>
+        </select>
     </div>
     <div class="input-item">
         <label>Personal Essay (The Story)</label>
-        <select id="p-essay"><option value="40">Masterpiece (Emotional/Funny) (+40)</option><option value="20">Strong Story (+20)</option><option value="5">Standard (+5)</option></select>
+        <select id="p-essay">
+            <option value="40">Masterpiece (Emotional/Funny) (+40)</option>
+            <option value="20">Strong Personal Story (+20)</option>
+            <option value="5">Standard Application Essay (+5)</option>
+            <option value="0">Not Started (+0)</option>
+        </select>
     </div>
     <div class="input-item">
-        <label>Extra (Jazz & Recs)</label>
-        <select id="p-extra"><option value="60">National Jazz & 3+ Recs (+60)</option><option value="30">State Jazz & 2 Recs (+30)</option><option value="10">Basic (+10)</option></select>
+        <label>Expert Recommendations</label>
+        <select id="p-recs">
+            <option value="30">3+ High-Impact Mentors (+30)</option>
+            <option value="15">2 Strong Mentors (+15)</option>
+            <option value="10">1 Strong Mentor (+10)</option>
+            <option value="0">None (+0)</option>
+        </select>
+    </div>
+    <div class="input-item">
+        <label>Jazz Band Achievement</label>
+        <select id="p-jazz">
+            <option value="30">National Level (+30)</option>
+            <option value="10">State Level (+10)</option>
+            <option value="5">District Level (+5)</option>
+            <option value="0">None (+0)</option>
+        </select>
     </div>
     <button class="btn btn-primary" style="background: #1e293b;" onclick="runPredictor()">Calculate Admission Chance</button>
     
@@ -171,7 +196,8 @@
         total += (parseInt(document.getElementById('p-ap').value) || 0) * 2.5;
         total += parseInt(document.getElementById('p-project').value);
         total += parseInt(document.getElementById('p-essay').value);
-        total += parseInt(document.getElementById('p-extra').value);
+        total += parseInt(document.getElementById('p-recs').value);
+        total += parseInt(document.getElementById('p-jazz').value);
 
         const box = document.getElementById('result-box');
         const rRank = document.getElementById('res-rank');
@@ -181,6 +207,9 @@
         if (total >= 180) {
             box.className = "rank-chosen"; rRank.innerText = "THE CHOSEN ONE";
             document.getElementById('res-msg').innerText = "Top 20 Universities are waiting for you.";
+        } else if (total >= 150) {
+            box.className = ""; box.style.background = "#dcfce7"; rRank.innerText = "IVY LEAGUE TIER";
+            document.getElementById('res-msg').innerText = "Very strong! Add one more National hook.";
         } else {
             box.className = ""; box.style.background = "#f1f5f9"; rRank.innerText = "KEEP PUSHING";
             document.getElementById('res-msg').innerText = "Focus on SAT 1550+ and your Project.";
@@ -204,7 +233,6 @@
             }
         });
     }
-
     window.onload = loadData;
 </script>
 </body>
