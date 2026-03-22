@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAT 1500 Tracker - Mason</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .app-container { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
+        .app-container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
         .header { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
         .score-label { font-size: 1.1rem; color: #444; margin-top: 20px; }
-        .score-value { font-size: 5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
-        .btn { width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .score-value { font-size: 4.5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
+        .btn { width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
+        
+        /* Graph Container */
+        .chart-container { margin-top: 30px; padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #eee; display: none; }
+        
+        /* Modal Styles */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
         .question-text { font-size: 1.1rem; color: #202124; line-height: 1.5; margin-bottom: 25px; font-weight: 500; }
-        .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; }
-        .choice-btn:hover { background: #f1f3f4; }
+        .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; }
         .sim-tag { background: #fee; color: #c00; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 15px; }
     </style>
 </head>
@@ -27,11 +32,15 @@
     <div class="sim-tag">Test Mode: 1 Minute = 1 Day</div>
     <div class="header" id="display-date">--</div>
     
-    <div class="score-label">Your Current Estimated SAT</div>
+    <div class="score-label">Current SAT Score</div>
     <div id="sat-score" class="score-value">1400</div>
     
     <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
-    <button class="btn btn-secondary" onclick="resetApp()">Reset All Data</button>
+    <button class="btn btn-secondary" onclick="toggleHistory()">View History & Graph</button>
+
+    <div id="history-section" class="chart-container">
+        <canvas id="scoreChart"></canvas>
+    </div>
 </div>
 
 <div id="prepModal" class="modal">
@@ -46,57 +55,55 @@
 </div>
 
 <script>
-    // --- Data Persistence ---
     let state = {
         score: 1400,
         lastUpdateMinute: new Date().getMinutes(),
-        didCheckIn: false
+        didCheckIn: false,
+        history: [{time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), score: 1400}]
     };
 
-    // Load data from LocalStorage
+    let chartInstance = null;
+
     function loadData() {
-        const saved = localStorage.getItem('satTrackerState');
+        const saved = localStorage.getItem('satTrackerStateV2');
         if (saved) {
-            const parsed = JSON.parse(saved);
-            state = parsed;
+            state = JSON.parse(saved);
             checkTimeGap();
         }
         updateUI();
     }
 
     function saveData() {
-        localStorage.setItem('satTrackerState', JSON.stringify(state));
+        localStorage.setItem('satTrackerStateV2', JSON.stringify(state));
     }
 
-    // --- Auto Penalty Logic (1 min = 1 day) ---
     function checkTimeGap() {
         const now = new Date();
         const currentMin = now.getMinutes();
         
-        // If the minute has changed since last time the app was open
         if (currentMin !== state.lastUpdateMinute) {
-            // How many minutes (days) have passed?
             let gap = currentMin - state.lastUpdateMinute;
-            if (gap < 0) gap += 60; // Handle hour turnover
+            if (gap < 0) gap += 60;
 
             if (!state.didCheckIn) {
-                // Apply penalty for each missed minute/day
-                state.score -= (gap * 4); 
-            } else {
-                // If they checked in, the first gap doesn't count, but subsequent ones do
-                if (gap > 1) state.score -= ((gap - 1) * 4);
+                state.score -= (gap * 4);
+                // Record history for each missed minute
+                for(let i=1; i<=gap; i++) {
+                    state.history.push({
+                        time: `Min ${ (state.lastUpdateMinute + i) % 60 }`,
+                        score: state.score + (gap-i)*4 - 4
+                    });
+                }
             }
-
             state.lastUpdateMinute = currentMin;
             state.didCheckIn = false;
             saveData();
+            updateUI();
         }
     }
 
-    // --- Prep Flow ---
     let currentStep = 1; 
     let sessionPoints = 0;
-
     const questions = {
         1: "Did you complete your assigned Khan Academy Math units today?",
         2: "Did you transfer every mistake to your 'Error Note' and analyze the logic behind them?",
@@ -105,12 +112,8 @@
     };
 
     function startPrep() {
-        if (state.didCheckIn) {
-            alert("You've already updated your score for today!");
-            return;
-        }
-        currentStep = 1;
-        sessionPoints = 0;
+        if (state.didCheckIn) return alert("Already updated for this 'minute'!");
+        currentStep = 1; sessionPoints = 0;
         showQuestion();
         document.getElementById('prepModal').style.display = 'flex';
     }
@@ -121,18 +124,13 @@
     }
 
     function handleChoice(isYes) {
-        if (currentStep === 1 || currentStep === 3) { // Main Goal Q
-            if (isYes) {
-                sessionPoints += 1;
-                currentStep++; // Go to Error Note Q
-            } else {
-                currentStep += 2; // Jump to next subject
-            }
-        } else { // Error Note Q
+        if (currentStep % 2 !== 0) { // Q1 or Q3
+            if (isYes) { sessionPoints += 1; currentStep++; } 
+            else { currentStep += 2; }
+        } else { // Q2 or Q4
             if (isYes) sessionPoints += 1;
             currentStep++;
         }
-
         if (currentStep > 4) finishSession();
         else showQuestion();
     }
@@ -140,31 +138,66 @@
     function finishSession() {
         state.score += sessionPoints;
         state.didCheckIn = true;
-        state.lastUpdateMinute = new Date().getMinutes();
+        state.history.push({
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            score: state.score
+        });
         saveData();
         updateUI();
         document.getElementById('prepModal').style.display = 'none';
-        alert("Your SAT score has been updated!");
+        if(chartInstance) updateChart();
     }
 
     function updateUI() {
         document.getElementById('sat-score').innerText = state.score;
-        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
     }
 
-    function resetApp() {
-        if (confirm("Reset everything to 1400?")) {
-            localStorage.clear();
-            location.reload();
+    function toggleHistory() {
+        const section = document.getElementById('history-section');
+        if (section.style.display === 'none' || section.style.display === '') {
+            section.style.display = 'block';
+            initChart();
+        } else {
+            section.style.display = 'none';
         }
     }
 
-    // Initialize on start
+    function initChart() {
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: state.history.map(h => h.time),
+                datasets: [{
+                    label: 'SAT Prediction',
+                    data: state.history.map(h => h.score),
+                    borderColor: '#e74c3c', // Red Line
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: false, suggestedMin: 1300, suggestedMax: 1600 }
+                }
+            }
+        });
+    }
+
+    function updateChart() {
+        chartInstance.data.labels = state.history.map(h => h.time);
+        chartInstance.data.datasets[0].data = state.history.map(h => h.score);
+        chartInstance.update();
+    }
+
     window.onload = loadData;
-
-    // Periodically check for time gap while app is open
     setInterval(checkTimeGap, 1000);
-
 </script>
 </body>
 </html>
