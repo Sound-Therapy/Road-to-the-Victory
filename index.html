@@ -3,98 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's SAT & Top 20 Roadmap</title>
+    <title>Mason's Elite Roadmap v1.3.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #ffd700; --bg: #f8fafc; }
+        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #ffd700; --bg: #f8fafc; --success: #22c55e; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: var(--secondary); }
-        .score-display { text-align: center; font-size: 3rem; font-weight: 800; margin: 20px 0; color: var(--primary); }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--secondary); }
-        .predictor-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
-        .card { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .input-group { margin: 10px 0; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
-        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        #result-display { text-align: center; padding: 20px; border-radius: 15px; margin-top: 20px; display: none; }
-        .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; }
+        h1, h2 { text-align: center; color: var(--secondary); margin-bottom: 10px; }
+        .score-display { text-align: center; font-size: 3.5rem; font-weight: 800; margin: 10px 0; color: var(--primary); }
+        .card { background: #f1f5f9; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .daily-check { display: flex; flex-direction: column; gap: 10px; }
+        .check-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-prep { background: var(--success); color: white; }
+        .btn-prep:hover { background: #16a34a; }
+        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; }
+        #result-area { display: none; text-align: center; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>SAT & University Roadmap</h1>
+    <h1>Elite SAT Roadmap</h1>
     
     <div class="score-display" id="sat-score">1400</div>
-    <canvas id="scoreChart" width="400" height="200"></canvas>
+    <canvas id="scoreChart" width="400" height="180"></canvas>
     
-    <div style="margin-top:20px;">
-        <button class="btn btn-primary" onclick="updateDaily(4)">SAT Prep Completed (+4)</button>
-        <button class="btn" style="background:#ef4444; color:white;" onclick="updateDaily(-4)">Forgot Daily Routine (-4)</button>
+    <div class="card">
+        <h2 style="font-size: 1.2rem; margin-top: 0;">⚡ Daily Performance Check</h2>
+        <div class="daily-check">
+            <div class="check-item"><span>Math Practice Done?</span> <input type="checkbox" id="math-check" style="width: 20px; height: 20px;"></div>
+            <div class="check-item"><span>English Practice Done?</span> <input type="checkbox" id="eng-check" style="width: 20px; height: 20px;"></div>
+            <div class="check-item"><span>Squats & Push-ups Done?</span> <input type="checkbox" id="gym-check" style="width: 20px; height: 20px;"></div>
+        </div>
+        <button class="btn btn-prep" onclick="processDaily()">Submit Today's Work</button>
     </div>
 
-    <div class="predictor-section">
+    <div class="predictor-section" style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
         <h2>🏛️ Top 20 Predictor</h2>
-        <p style="text-align:center; font-size:0.9rem; color:#64748b;">Calculate your chance for Ivy League & Top 20s</p>
-        
         <div class="card">
             <label>GPA (Unweighted)</label>
-            <select id="gpa">
-                <option value="20">3.9 or Higher (+20)</option>
-                <option value="15">3.7 - 3.89 (+15)</option>
-                <option value="0">Below 3.7 (+0)</option>
-            </select>
+            <select id="gpa"><option value="20">3.9+ (+20)</option><option value="15">3.7-3.89 (+15)</option><option value="0">Below 3.7 (+0)</option></select>
+            
+            <label style="margin-top:15px;">Number of AP/Honors</label>
+            <input type="number" id="ap-count" placeholder="e.g. 5">
+
+            <label style="margin-top:15px;">SoundBuddy (App Project)</label>
+            <select id="project"><option value="50">National Award (+50)</option><option value="35">State Award (+35)</option><option value="20">Regional Award (+20)</option><option value="10">Development (+10)</option></select>
+
+            <label style="margin-top:15px;">Personal Essay (The Story)</label>
+            <select id="essay"><option value="40">Masterpiece (Emotional/Funny) (+40)</option><option value="20">Strong Story (+20)</option><option value="5">Standard (+5)</option></select>
+
+            <label style="margin-top:15px;">Recommendations & Jazz</label>
+            <select id="extra"><option value="40">3+ Recs & National Jazz (+40)</option><option value="20">2 Recs & State Jazz (+20)</option><option value="10">Basic (+10)</option></select>
         </div>
 
-        <div class="card">
-            <label>Number of AP/Honors Courses</label>
-            <input type="number" id="ap-count" placeholder="Enter number of courses" onchange="calculateScore()">
-        </div>
+        <button class="btn" style="background:#1e293b; color:white;" onclick="calculatePredictor()">Analyze Top 20 Chance</button>
 
-        <div class="card">
-            <label>SoundBuddy (Passion Project)</label>
-            <select id="project">
-                <option value="50">National Award / Launch (+50)</option>
-                <option value="35">State Level Award (+35)</option>
-                <option value="20">Regional Award / MVP (+20)</option>
-                <option value="10">Development Started (+10)</option>
-            </select>
-        </div>
-
-        <div class="card">
-            <label>Jazz Band & Art</label>
-            <select id="jazz">
-                <option value="30">National Level Honors (+30)</option>
-                <option value="10">State Level Honors (+10)</option>
-                <option value="5">District / School Level (+5)</option>
-            </select>
-        </div>
-
-        <div class="card">
-            <label>Personal Essay (Story)</label>
-            <select id="essay">
-                <option value="40">Masterpiece: Emotional & Humorous (+40)</option>
-                <option value="20">Strong Personal Story (+20)</option>
-                <option value="5">Standard Application Essay (+5)</option>
-            </select>
-        </div>
-
-        <div class="card">
-            <label>Expert Recommendations</label>
-            <select id="recs">
-                <option value="30">3+ High-Impact Mentors (+30)</option>
-                <option value="15">2 Strong Mentors (+15)</option>
-                <option value="10">1 Strong Mentor (+10)</option>
-            </select>
-        </div>
-
-        <button class="btn" style="background:#1e293b; color:white;" onclick="calculateScore()">Analyze My Chances</button>
-
-        <div id="result-display">
-            <h3 id="res-score">Total Score: 0</h3>
+        <div id="result-area">
+            <h3 id="res-score">Score: 0</h3>
             <h2 id="res-rank">RANK</h2>
             <p id="res-msg"></p>
         </div>
@@ -105,57 +73,65 @@
     let scores = JSON.parse(localStorage.getItem('satHistory')) || [1400];
     let currentScore = scores[scores.length - 1];
 
-    function updateDaily(points) {
-        currentScore += points;
+    function processDaily() {
+        const math = document.getElementById('math-check').checked;
+        const eng = document.getElementById('eng-check').checked;
+        const gym = document.getElementById('gym-check').checked;
+        
+        let dailyGain = 0;
+        if(math && eng) dailyGain += 4; // Basic SAT Prep
+        else if(math || eng) dailyGain += 2;
+        
+        if(gym) dailyGain += 1; // Physical Bonus!
+
+        if(dailyGain === 0) {
+            alert("No progress today? Let's get to work, Mason!");
+            return;
+        }
+
+        currentScore += dailyGain;
         scores.push(currentScore);
         if(scores.length > 30) scores.shift();
         localStorage.setItem('satHistory', JSON.stringify(scores));
+        
+        // Reset Checkboxes
+        document.getElementById('math-check').checked = false;
+        document.getElementById('eng-check').checked = false;
+        document.getElementById('gym-check').checked = false;
+        
         renderUI();
+        alert(`Good job! +${dailyGain} points added to your SAT trajectory.`);
     }
 
-    function calculateScore() {
+    function calculatePredictor() {
         let total = 0;
-        
-        // 1. SAT Auto-sync
+        // SAT Sync
         if (currentScore >= 1550) total += 20;
         else if (currentScore >= 1500) total += 15;
 
-        // 2. Academic & Projects
+        // Inputs
         total += parseInt(document.getElementById('gpa').value);
         total += (parseInt(document.getElementById('ap-count').value) || 0) * 2.5;
         total += parseInt(document.getElementById('project').value);
-        total += parseInt(document.getElementById('jazz').value);
         total += parseInt(document.getElementById('essay').value);
-        total += parseInt(document.getElementById('recs').value);
+        total += parseInt(document.getElementById('extra').value);
 
-        showFinalResult(total);
-    }
+        const area = document.getElementById('result-area');
+        area.style.display = "block";
+        document.getElementById('res-score').innerText = `Admission Score: ${total}`;
 
-    function showFinalResult(score) {
-        const display = document.getElementById('result-display');
-        const resRank = document.getElementById('res-rank');
-        const resMsg = document.getElementById('res-msg');
-        const resScore = document.getElementById('res-score');
-        
-        display.style.display = "block";
-        resScore.innerText = `Total Admission Score: ${score}`;
-
-        if (score >= 180) {
-            display.className = "rank-chosen";
-            resRank.innerText = "THE CHOSEN ONE";
-            resMsg.innerText = "You are a top-tier candidate. UPenn and Ivy Leagues are within your reach.";
-        } else if (score >= 150) {
-            display.className = "card";
-            resRank.innerText = "IVY LEAGUE TIER";
-            resMsg.innerText = "Highly competitive. One more 'National' hook will secure your spot.";
-        } else if (score >= 100) {
-            display.className = "card";
-            resRank.innerText = "COMPETITIVE BLUE";
-            resMsg.innerText = "Solid standing. Strengthen your Passion Project to stand out.";
+        if (total >= 180) {
+            area.className = "rank-chosen";
+            document.getElementById('res-rank').innerText = "THE CHOSEN ONE";
+            document.getElementById('res-msg').innerText = "You are an elite candidate. Every Ivy League is waiting for your story.";
+        } else if (total >= 150) {
+            area.className = "card"; area.style.background = "#dcfce7";
+            document.getElementById('res-rank').innerText = "IVY LEAGUE TIER";
+            document.getElementById('res-msg').innerText = "Strong candidate! Focus on one more National level achievement.";
         } else {
-            display.className = "card";
-            resRank.innerText = "THE GROUNDWORK";
-            resMsg.innerText = "Focus on hitting 1550+ SAT and 3.9+ GPA first.";
+            area.className = "card"; area.style.background = "#f1f5f9";
+            document.getElementById('res-rank').innerText = "WORK IN PROGRESS";
+            document.getElementById('res-msg').innerText = "Keep building. Hit 1550 SAT and push your SoundBuddy project.";
         }
     }
 
@@ -170,17 +146,15 @@
         data: {
             labels: scores.map((_, i) => `Day ${i+1}`),
             datasets: [{
-                label: 'Estimated SAT Score',
+                label: 'SAT Prediction',
                 data: scores,
                 borderColor: '#2563eb',
-                tension: 0.3,
-                fill: true,
-                backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true, tension: 0.3
             }]
         },
-        options: { scales: { y: { min: 1300, max: 1600 } } }
+        options: { scales: { y: { min: 1350, max: 1600 } } }
     });
-
     renderUI();
 </script>
 
