@@ -3,160 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Elite Roadmap v1.3.0</title>
+    <title>SAT 1500 Tracker - Mason Official</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #ffd700; --bg: #f8fafc; --success: #22c55e; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: var(--secondary); margin-bottom: 10px; }
-        .score-display { text-align: center; font-size: 3.5rem; font-weight: 800; margin: 10px 0; color: var(--primary); }
-        .card { background: #f1f5f9; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .daily-check { display: flex; flex-direction: column; gap: 10px; }
-        .check-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-prep { background: var(--success); color: white; }
-        .btn-prep:hover { background: #16a34a; }
-        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; }
-        #result-area { display: none; text-align: center; padding: 20px; border-radius: 15px; margin-top: 20px; }
-        .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4); }
+        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .app-container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
+        .header { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+        .score-value { font-size: 5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
+        .btn { width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background-color: #1a73e8; color: white; }
+        .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
+        .chart-container { margin-top: 30px; padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #eee; display: none; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
+        .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+        
+        /* Predictor Style */
+        .predictor-card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .input-item { text-align: left; margin-bottom: 15px; }
+        label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+        #result-box { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; }
+        .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Elite SAT Roadmap</h1>
+<div class="app-container">
+    <div class="header" id="display-date">--</div>
+    <div style="font-size: 1.1rem; color: #444;">Current Estimated SAT Score</div>
+    <div id="sat-score" class="score-value">1400</div>
     
-    <div class="score-display" id="sat-score">1400</div>
-    <canvas id="scoreChart" width="400" height="180"></canvas>
-    
-    <div class="card">
-        <h2 style="font-size: 1.2rem; margin-top: 0;">⚡ Daily Performance Check</h2>
-        <div class="daily-check">
-            <div class="check-item"><span>Math Practice Done?</span> <input type="checkbox" id="math-check" style="width: 20px; height: 20px;"></div>
-            <div class="check-item"><span>English Practice Done?</span> <input type="checkbox" id="eng-check" style="width: 20px; height: 20px;"></div>
-            <div class="check-item"><span>Squats & Push-ups Done?</span> <input type="checkbox" id="gym-check" style="width: 20px; height: 20px;"></div>
-        </div>
-        <button class="btn btn-prep" onclick="processDaily()">Submit Today's Work</button>
+    <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
+    <button class="btn btn-secondary" onclick="toggleHistory()">View History & Graph</button>
+
+    <div id="history-section" class="chart-container">
+        <canvas id="scoreChart"></canvas>
     </div>
+</div>
 
-    <div class="predictor-section" style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
-        <h2>🏛️ Top 20 Predictor</h2>
-        <div class="card">
-            <label>GPA (Unweighted)</label>
-            <select id="gpa"><option value="20">3.9+ (+20)</option><option value="15">3.7-3.89 (+15)</option><option value="0">Below 3.7 (+0)</option></select>
-            
-            <label style="margin-top:15px;">Number of AP/Honors</label>
-            <input type="number" id="ap-count" placeholder="e.g. 5">
+<div class="predictor-card">
+    <h2 style="color: #1e3a8a; margin-top: 0;">🏛️ Top 20 Predictor</h2>
+    <div class="input-item">
+        <label>GPA (Unweighted)</label>
+        <select id="p-gpa"><option value="20">3.9+ (+20)</option><option value="15">3.7-3.89 (+15)</option><option value="0">Below 3.7 (+0)</option></select>
+    </div>
+    <div class="input-item">
+        <label>Number of AP/Honors</label>
+        <input type="number" id="p-ap" placeholder="e.g. 6">
+    </div>
+    <div class="input-item">
+        <label>SoundBuddy Project</label>
+        <select id="p-project"><option value="50">National Award (+50)</option><option value="35">State Award (+35)</option><option value="20">Regional Award (+20)</option><option value="10">Development (+10)</option></select>
+    </div>
+    <div class="input-item">
+        <label>Personal Essay (The Story)</label>
+        <select id="p-essay"><option value="40">Masterpiece (Emotional/Funny) (+40)</option><option value="20">Strong Story (+20)</option><option value="5">Standard (+5)</option></select>
+    </div>
+    <div class="input-item">
+        <label>Extra (Jazz & Recs)</label>
+        <select id="p-extra"><option value="60">National Jazz & 3+ Recs (+60)</option><option value="30">State Jazz & 2 Recs (+30)</option><option value="10">Basic (+10)</option></select>
+    </div>
+    <button class="btn btn-primary" style="background: #1e293b;" onclick="runPredictor()">Calculate Admission Chance</button>
+    
+    <div id="result-box">
+        <div id="res-score" style="font-weight: bold;">Score: 0</div>
+        <div id="res-rank" style="font-size: 1.5rem; font-weight: 800; margin: 5px 0;">RANK</div>
+        <div id="res-msg" style="font-size: 0.9rem;">Message</div>
+    </div>
+</div>
 
-            <label style="margin-top:15px;">SoundBuddy (App Project)</label>
-            <select id="project"><option value="50">National Award (+50)</option><option value="35">State Award (+35)</option><option value="20">Regional Award (+20)</option><option value="10">Development (+10)</option></select>
-
-            <label style="margin-top:15px;">Personal Essay (The Story)</label>
-            <select id="essay"><option value="40">Masterpiece (Emotional/Funny) (+40)</option><option value="20">Strong Story (+20)</option><option value="5">Standard (+5)</option></select>
-
-            <label style="margin-top:15px;">Recommendations & Jazz</label>
-            <select id="extra"><option value="40">3+ Recs & National Jazz (+40)</option><option value="20">2 Recs & State Jazz (+20)</option><option value="10">Basic (+10)</option></select>
-        </div>
-
-        <button class="btn" style="background:#1e293b; color:white;" onclick="calculatePredictor()">Analyze Top 20 Chance</button>
-
-        <div id="result-area">
-            <h3 id="res-score">Score: 0</h3>
-            <h2 id="res-rank">RANK</h2>
-            <p id="res-msg"></p>
+<div id="prepModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title" style="color: #1a73e8; margin-top: 0;">Math</h2>
+        <p id="question-display" style="font-size: 1.1rem; line-height: 1.5;">Loading...</p>
+        <div style="display: flex; justify-content: space-between;">
+            <button class="choice-btn" onclick="handleChoice(true)">Yes</button>
+            <button class="choice-btn" onclick="handleChoice(false)">No</button>
         </div>
     </div>
 </div>
 
 <script>
-    let scores = JSON.parse(localStorage.getItem('satHistory')) || [1400];
-    let currentScore = scores[scores.length - 1];
+    let state = {
+        score: 1400,
+        lastUpdateDay: new Date().toDateString(),
+        didCheckIn: false,
+        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1400}]
+    };
 
-    function processDaily() {
-        const math = document.getElementById('math-check').checked;
-        const eng = document.getElementById('eng-check').checked;
-        const gym = document.getElementById('gym-check').checked;
-        
-        let dailyGain = 0;
-        if(math && eng) dailyGain += 4; // Basic SAT Prep
-        else if(math || eng) dailyGain += 2;
-        
-        if(gym) dailyGain += 1; // Physical Bonus!
+    let chartInstance = null;
+    let currentStep = 1; 
+    let sessionPoints = 0;
 
-        if(dailyGain === 0) {
-            alert("No progress today? Let's get to work, Mason!");
-            return;
-        }
+    const questions = {
+        1: "Did you complete your assigned Khan Academy Math units today?",
+        2: "Did you transfer every mistake to your 'Error Note' and analyze the logic behind them?",
+        3: "Did you complete your Khan Academy 'Reading & Writing' practice today?",
+        4: "Did you review the 'Answer Explanations' and summarize the logic in your note?",
+        5: "Did you complete your physical training? (Squats & Push-ups)"
+    };
 
-        currentScore += dailyGain;
-        scores.push(currentScore);
-        if(scores.length > 30) scores.shift();
-        localStorage.setItem('satHistory', JSON.stringify(scores));
-        
-        // Reset Checkboxes
-        document.getElementById('math-check').checked = false;
-        document.getElementById('eng-check').checked = false;
-        document.getElementById('gym-check').checked = false;
-        
-        renderUI();
-        alert(`Good job! +${dailyGain} points added to your SAT trajectory.`);
+    function loadData() {
+        const saved = localStorage.getItem('satTracker_Mason_Official');
+        if (saved) { state = JSON.parse(saved); checkDailyGap(); }
+        updateUI();
     }
 
-    function calculatePredictor() {
+    function saveData() { localStorage.setItem('satTracker_Mason_Official', JSON.stringify(state)); }
+
+    function checkDailyGap() {
+        const todayStr = new Date().toDateString();
+        if (todayStr !== state.lastUpdateDay) {
+            const lastDate = new Date(state.lastUpdateDay);
+            const diffDays = Math.ceil(Math.abs(new Date(todayStr) - lastDate) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 1) {
+                for(let i = (state.didCheckIn ? 1 : 0); i < diffDays; i++) {
+                    state.score -= 4;
+                    let mDate = new Date(lastDate); mDate.setDate(lastDate.getDate() + i);
+                    state.history.push({ date: mDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
+                }
+            }
+            state.lastUpdateDay = todayStr; state.didCheckIn = false;
+            saveData(); updateUI();
+        }
+    }
+
+    function startPrep() {
+        if (state.didCheckIn) return alert("Already updated for today!");
+        currentStep = 1; sessionPoints = 0; showQuestion();
+        document.getElementById('prepModal').style.display = 'flex';
+    }
+
+    function showQuestion() {
+        let title = "Math";
+        if (currentStep >= 3 && currentStep <= 4) title = "ELA";
+        if (currentStep === 5) title = "Physical";
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('question-display').innerText = questions[currentStep];
+    }
+
+    function handleChoice(isYes) {
+        if (isYes) sessionPoints += 1;
+        currentStep++;
+        if (currentStep > 5) finishSession();
+        else showQuestion();
+    }
+
+    function finishSession() {
+        state.score += sessionPoints;
+        state.didCheckIn = true;
+        state.history.push({ date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
+        saveData(); updateUI();
+        document.getElementById('prepModal').style.display = 'none';
+        if(chartInstance) initChart();
+    }
+
+    function updateUI() {
+        document.getElementById('sat-score').innerText = state.score;
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function runPredictor() {
         let total = 0;
-        // SAT Sync
-        if (currentScore >= 1550) total += 20;
-        else if (currentScore >= 1500) total += 15;
+        if (state.score >= 1550) total += 20; else if (state.score >= 1500) total += 15;
+        total += parseInt(document.getElementById('p-gpa').value);
+        total += (parseInt(document.getElementById('p-ap').value) || 0) * 2.5;
+        total += parseInt(document.getElementById('p-project').value);
+        total += parseInt(document.getElementById('p-essay').value);
+        total += parseInt(document.getElementById('p-extra').value);
 
-        // Inputs
-        total += parseInt(document.getElementById('gpa').value);
-        total += (parseInt(document.getElementById('ap-count').value) || 0) * 2.5;
-        total += parseInt(document.getElementById('project').value);
-        total += parseInt(document.getElementById('essay').value);
-        total += parseInt(document.getElementById('extra').value);
-
-        const area = document.getElementById('result-area');
-        area.style.display = "block";
-        document.getElementById('res-score').innerText = `Admission Score: ${total}`;
+        const box = document.getElementById('result-box');
+        const rRank = document.getElementById('res-rank');
+        box.style.display = "block";
+        document.getElementById('res-score').innerText = `Total Score: ${total}`;
 
         if (total >= 180) {
-            area.className = "rank-chosen";
-            document.getElementById('res-rank').innerText = "THE CHOSEN ONE";
-            document.getElementById('res-msg').innerText = "You are an elite candidate. Every Ivy League is waiting for your story.";
-        } else if (total >= 150) {
-            area.className = "card"; area.style.background = "#dcfce7";
-            document.getElementById('res-rank').innerText = "IVY LEAGUE TIER";
-            document.getElementById('res-msg').innerText = "Strong candidate! Focus on one more National level achievement.";
+            box.className = "rank-chosen"; rRank.innerText = "THE CHOSEN ONE";
+            document.getElementById('res-msg').innerText = "Top 20 Universities are waiting for you.";
         } else {
-            area.className = "card"; area.style.background = "#f1f5f9";
-            document.getElementById('res-rank').innerText = "WORK IN PROGRESS";
-            document.getElementById('res-msg').innerText = "Keep building. Hit 1550 SAT and push your SoundBuddy project.";
+            box.className = ""; box.style.background = "#f1f5f9"; rRank.innerText = "KEEP PUSHING";
+            document.getElementById('res-msg').innerText = "Focus on SAT 1550+ and your Project.";
         }
     }
 
-    function renderUI() {
-        document.getElementById('sat-score').innerText = currentScore;
-        chart.update();
+    function toggleHistory() {
+        const s = document.getElementById('history-section');
+        s.style.display = (s.style.display === 'block') ? 'none' : 'block';
+        if (s.style.display === 'block') initChart();
     }
 
-    const ctx = document.getElementById('scoreChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: scores.map((_, i) => `Day ${i+1}`),
-            datasets: [{
-                label: 'SAT Prediction',
-                data: scores,
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                fill: true, tension: 0.3
-            }]
-        },
-        options: { scales: { y: { min: 1350, max: 1600 } } }
-    });
-    renderUI();
-</script>
+    function initChart() {
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: state.history.map(h => h.date),
+                datasets: [{ label: 'Score', data: state.history.map(h => h.score), borderColor: '#1a73e8', tension: 0.3 }]
+            }
+        });
+    }
 
+    window.onload = loadData;
+</script>
 </body>
 </html>
