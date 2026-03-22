@@ -3,177 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAT 1500 Tracker - Mason Edition</title>
+    <title>SAT 1500 Tracker - Mason</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .app-container { width: 100%; max-width: 400px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .header { text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 20px; }
-        .score-section { text-align: center; margin-bottom: 30px; }
-        .score-label { font-size: 1rem; color: #888; }
-        .score-value { font-size: 4rem; font-weight: bold; color: #2c3e50; margin: 10px 0; }
-        .score-change { font-size: 1.2rem; font-weight: bold; }
-        .up { color: #27ae60; } .down { color: #e74c3c; }
-        
-        .btn { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-primary { background-color: #3498db; color: white; }
-        .btn-secondary { background-color: #ecf0f1; color: #7f8c8d; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 80%; max-width: 300px; }
-        .question { margin-bottom: 20px; }
-        .history-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.8rem; color: #777; }
-        .sim-info { background: #fff3cd; padding: 5px; font-size: 0.7rem; border-radius: 5px; margin-bottom: 10px; text-align: center; }
+        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .app-container { width: 100%; max-width: 400px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
+        .header { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+        .score-label { font-size: 1.1rem; color: #444; margin-top: 20px; }
+        .score-value { font-size: 5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
+        .btn { width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background-color: #1a73e8; color: white; }
+        .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .question-text { font-size: 1.1rem; color: #202124; line-height: 1.5; margin-bottom: 25px; font-weight: 500; }
+        .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; font-size: 1rem; }
+        .choice-btn:hover { background: #f1f3f4; }
+        .sim-tag { background: #fee; color: #c00; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="sim-info">🛠 Simulation Mode: 1 Minute = 1 Day</div>
-    <div class="header" id="current-date">March 22, 2026</div>
+    <div class="sim-tag">Test Mode: 1 Minute = 1 Day</div>
+    <div class="header" id="display-date">--</div>
     
-    <div class="score-section">
-        <div class="score-label">Your Current Estimated SAT</div>
-        <div class="score-value" id="sat-score">1400</div>
-        <div class="score-change" id="score-trend">--</div>
-    </div>
-
-    <button class="btn btn-primary" onclick="openPrep()">SAT Prep Start</button>
-    <button class="btn btn-secondary" onclick="alert('Graph feature coming soon!')">History & Trends</button>
-
-    <div class="history-list" id="history-log">
-        <strong>History (Recent)</strong>
-        <div id="log-items"></div>
-    </div>
+    <div class="score-label">Your Current Estimated SAT</div>
+    <div id="sat-score" class="score-value">1400</div>
+    
+    <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
+    <button class="btn btn-secondary" onclick="resetApp()">Reset All Data</button>
 </div>
 
 <div id="prepModal" class="modal">
     <div class="modal-content">
-        <h3 id="subject-title">Math Section</h3>
-        <div id="q1-area" class="question">
-            <p id="q1-text">Did you finish Khan Academy?</p>
-            <button onclick="handleAnswer(true)">Yes</button>
-            <button onclick="handleAnswer(false)">No</button>
-        </div>
-        <div id="q2-area" class="question" style="display:none;">
-            <p id="q2-text">Did you finish Error Note?</p>
-            <button onclick="handleAnswer(true)">Yes</button>
-            <button onclick="handleAnswer(false)">No</button>
+        <h2 id="modal-title" style="color: #1a73e8; margin-top: 0;">Math</h2>
+        <p id="question-display" class="question-text">Loading...</p>
+        <div style="display: flex; justify-content: space-between;">
+            <button class="choice-btn" onclick="handleChoice(true)">Yes</button>
+            <button class="choice-btn" onclick="handleChoice(false)">No</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- App Logic ---
-    let currentSAT = 1400;
-    let lastSAT = 1400;
-    let lastUpdateMinute = new Date().getMinutes();
-    let didCheckInThisMinute = false;
-    
-    let currentStep = 1; // 1: Math Q1, 2: Math Q2, 3: ELA Q1, 4: ELA Q2
-    let tempEarnedPoints = 0;
+    // --- Data Persistence ---
+    let state = {
+        score: 1400,
+        lastUpdateMinute: new Date().getMinutes(),
+        didCheckIn: false
+    };
 
-    function updateUI() {
-        document.getElementById('sat-score').innerText = currentSAT;
-        const trend = document.getElementById('score-trend');
-        const diff = currentSAT - lastSAT;
+    // Load data from LocalStorage
+    function loadData() {
+        const saved = localStorage.getItem('satTrackerState');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            state = parsed;
+            checkTimeGap();
+        }
+        updateUI();
+    }
+
+    function saveData() {
+        localStorage.setItem('satTrackerState', JSON.stringify(state));
+    }
+
+    // --- Auto Penalty Logic (1 min = 1 day) ---
+    function checkTimeGap() {
+        const now = new Date();
+        const currentMin = now.getMinutes();
         
-        if (diff > 0) {
-            trend.innerText = `▲ ${diff} pts from yesterday`;
-            trend.className = "score-change up";
-        } else if (diff < 0) {
-            trend.innerText = `▼ ${Math.abs(diff)} pts from yesterday`;
-            trend.className = "score-change down";
-        } else {
-            trend.innerText = "--";
-            trend.className = "score-change";
-        }
-    }
+        // If the minute has changed since last time the app was open
+        if (currentMin !== state.lastUpdateMinute) {
+            // How many minutes (days) have passed?
+            let gap = currentMin - state.lastUpdateMinute;
+            if (gap < 0) gap += 60; // Handle hour turnover
 
-    // --- Time Simulation Engine ---
-    setInterval(() => {
-        let now = new Date();
-        let currentMinute = now.getMinutes();
-
-        // If a "New Day" (New Minute) starts
-        if (currentMinute !== lastUpdateMinute) {
-            if (!didCheckInThisMinute) {
-                lastSAT = currentSAT;
-                currentSAT -= 4; // Penalty
-                addLog("Missed Check-in", -4);
-                updateUI();
+            if (!state.didCheckIn) {
+                // Apply penalty for each missed minute/day
+                state.score -= (gap * 4); 
+            } else {
+                // If they checked in, the first gap doesn't count, but subsequent ones do
+                if (gap > 1) state.score -= ((gap - 1) * 4);
             }
-            lastUpdateMinute = currentMinute;
-            didCheckInThisMinute = false;
-            console.log("New Simulation Day Started...");
-        }
-    }, 1000);
 
-    function addLog(activity, change) {
-        const log = document.getElementById('log-items');
-        const item = document.createElement('div');
-        item.innerText = `${new Date().toLocaleTimeString()} | ${activity} (${change > 0 ? '+' : ''}${change})`;
-        log.prepend(item);
+            state.lastUpdateMinute = currentMin;
+            state.didCheckIn = false;
+            saveData();
+        }
     }
 
-    // --- SAT Prep Flow ---
-    function openPrep() {
-        if(didCheckInThisMinute) return alert("Already submitted for today!");
+    // --- Prep Flow ---
+    let currentStep = 1; 
+    let sessionPoints = 0;
+
+    const questions = {
+        1: "Did you complete your assigned Khan Academy Math units today?",
+        2: "Did you transfer every mistake to your 'Error Note' and analyze the logic behind them?",
+        3: "Did you complete your Khan Academy 'Reading & Writing' practice today?",
+        4: "Did you review the 'Answer Explanations' and summarize the logic in your note?"
+    };
+
+    function startPrep() {
+        if (state.didCheckIn) {
+            alert("You've already updated your score for today!");
+            return;
+        }
         currentStep = 1;
-        tempEarnedPoints = 0;
-        showStep();
+        sessionPoints = 0;
+        showQuestion();
         document.getElementById('prepModal').style.display = 'flex';
     }
 
-    function showStep() {
-        const q1Area = document.getElementById('q1-area');
-        const q2Area = document.getElementById('q2-area');
-        const title = document.getElementById('subject-title');
-        const q1Text = document.getElementById('q1-text');
-        const q2Text = document.getElementById('q2-text');
-
-        q2Area.style.display = 'none';
-        q1Area.style.display = 'block';
-
-        if (currentStep <= 2) {
-            title.innerText = "Math Section";
-            q1Text.innerText = "Did you complete Khan Academy Math?";
-            q2Text.innerText = "Did you finish Math Error Note?";
-        } else {
-            title.innerText = "ELA Section";
-            q1Text.innerText = "Did you complete Khan Academy ELA?";
-            q2Text.innerText = "Did you finish ELA Error Note?";
-        }
+    function showQuestion() {
+        document.getElementById('modal-title').innerText = currentStep <= 2 ? "Math" : "ELA";
+        document.getElementById('question-display').innerText = questions[currentStep];
     }
 
-    function handleAnswer(isYes) {
-        if (currentStep === 1 || currentStep === 3) { // Q1 (Completion)
+    function handleChoice(isYes) {
+        if (currentStep === 1 || currentStep === 3) { // Main Goal Q
             if (isYes) {
-                tempEarnedPoints += 1;
-                currentStep++; // Go to Q2 (Error Note)
-                document.getElementById('q1-area').style.display = 'none';
-                document.getElementById('q2-area').style.display = 'block';
+                sessionPoints += 1;
+                currentStep++; // Go to Error Note Q
             } else {
-                currentStep += 2; // Skip to next subject's Q1
-                if (currentStep > 4) finishPrep();
-                else showStep();
+                currentStep += 2; // Jump to next subject
             }
-        } else { // Q2 (Error Note)
-            if (isYes) tempEarnedPoints += 1;
-            currentStep++; 
-            if (currentStep > 4) finishPrep();
-            else showStep();
+        } else { // Error Note Q
+            if (isYes) sessionPoints += 1;
+            currentStep++;
         }
+
+        if (currentStep > 4) finishSession();
+        else showQuestion();
     }
 
-    function finishPrep() {
-        lastSAT = currentSAT;
-        currentSAT += tempEarnedPoints;
-        didCheckInThisMinute = true;
-        addLog("Completed SAT Prep", tempEarnedPoints);
+    function finishSession() {
+        state.score += sessionPoints;
+        state.didCheckIn = true;
+        state.lastUpdateMinute = new Date().getMinutes();
+        saveData();
         updateUI();
         document.getElementById('prepModal').style.display = 'none';
+        alert("Your SAT score has been updated!");
     }
-</script>
 
+    function updateUI() {
+        document.getElementById('sat-score').innerText = state.score;
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function resetApp() {
+        if (confirm("Reset everything to 1400?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // Initialize on start
+    window.onload = loadData;
+
+    // Periodically check for time gap while app is open
+    setInterval(checkTimeGap, 1000);
+
+</script>
 </body>
 </html>
