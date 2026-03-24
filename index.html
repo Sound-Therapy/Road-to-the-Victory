@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAT 1500 Tracker - Mason Official</title>
+    <title>Mason's Victory Roadmap v1.4.1</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .app-container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
@@ -17,8 +19,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
         .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
-        
-        /* Predictor Style */
         .predictor-card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .input-item { text-align: left; margin-bottom: 15px; }
         label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
@@ -30,9 +30,9 @@
 <body>
 
 <div class="app-container">
-    <div class="header" id="display-date">--</div>
+    <div class="header" id="display-date">Loading...</div>
     <div style="font-size: 1.1rem; color: #444;">Current Estimated SAT Score</div>
-    <div id="sat-score" class="score-value">1400</div>
+    <div id="sat-score" class="score-value">----</div>
     
     <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
     <button class="btn btn-secondary" onclick="toggleHistory()">View History & Graph</button>
@@ -53,13 +53,13 @@
         <input type="number" id="p-ap" placeholder="e.g. 6">
     </div>
     <div class="input-item">
-        <label>SoundBuddy Project</label>
+        <label>SoundBuddy Project (App Development)</label>
         <select id="p-project">
             <option value="50">National Award (+50)</option>
             <option value="35">State Award (+35)</option>
             <option value="20">Regional Award (+20)</option>
             <option value="10">Development Started (+10)</option>
-            <option value="0">No Project / Not Started (+0)</option>
+            <option value="0">Not Started / No Project (+0)</option>
         </select>
     </div>
     <div class="input-item">
@@ -74,9 +74,9 @@
     <div class="input-item">
         <label>External Industry Experts (Non-School Recommendations)</label>
         <select id="p-recs">
-            <option value="30">3+ High-Impact Mentors (+30)</option>
-            <option value="15">2 Strong Mentors (+15)</option>
-            <option value="10">1 Strong Mentor (+10)</option>
+            <option value="30">3+ High-Impact Field Experts (+30)</option>
+            <option value="15">2 External Industry Mentors (+15)</option>
+            <option value="10">1 External Industry Mentor (+10)</option>
             <option value="0">None (+0)</option>
         </select>
     </div>
@@ -90,7 +90,6 @@
         </select>
     </div>
     <button class="btn btn-primary" style="background: #1e293b;" onclick="runPredictor()">Calculate Admission Chance</button>
-    
     <div id="result-box">
         <div id="res-score" style="font-weight: bold;">Score: 0</div>
         <div id="res-rank" style="font-size: 1.5rem; font-weight: 800; margin: 5px 0;">RANK</div>
@@ -110,11 +109,26 @@
 </div>
 
 <script>
+    // --- 1. Firebase Initialization ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAoLonGkvQrPpNk5Rl8vJvR-eNg63xUPO4",
+        authDomain: "road-to-the-victory-mason.firebaseapp.com",
+        projectId: "road-to-the-victory-mason",
+        storageBucket: "road-to-the-victory-mason.firebasestorage.app",
+        messagingSenderId: "501843531403",
+        appId: "1:501843531403:web:da9adcba51b12ad057e68e",
+        databaseURL: "https://road-to-the-victory-mason-default-rtdb.firebaseio.com/"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 시작 점수를 1405로 설정
     let state = {
-        score: 1400,
+        score: 1405, 
         lastUpdateDay: new Date().toDateString(),
         didCheckIn: false,
-        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1400}]
+        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1405}]
     };
 
     let chartInstance = null;
@@ -129,13 +143,21 @@
         5: "Did you complete your physical training? (Squats & Push-ups)"
     };
 
-    function loadData() {
-        const saved = localStorage.getItem('satTracker_Mason_Official');
-        if (saved) { state = JSON.parse(saved); checkDailyGap(); }
-        updateUI();
+    function loadDataFromServer() {
+        db.ref('mason_sat_data').once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                state = snapshot.val();
+                checkDailyGap();
+            } else {
+                saveDataToServer(); 
+            }
+            updateUI();
+        });
     }
 
-    function saveData() { localStorage.setItem('satTracker_Mason_Official', JSON.stringify(state)); }
+    function saveDataToServer() {
+        db.ref('mason_sat_data').set(state);
+    }
 
     function checkDailyGap() {
         const todayStr = new Date().toDateString();
@@ -150,7 +172,7 @@
                 }
             }
             state.lastUpdateDay = todayStr; state.didCheckIn = false;
-            saveData(); updateUI();
+            saveDataToServer(); updateUI();
         }
     }
 
@@ -179,7 +201,7 @@
         state.score += sessionPoints;
         state.didCheckIn = true;
         state.history.push({ date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
-        saveData(); updateUI();
+        saveDataToServer(); updateUI();
         document.getElementById('prepModal').style.display = 'none';
         if(chartInstance) initChart();
     }
@@ -233,7 +255,8 @@
             }
         });
     }
-    window.onload = loadData;
+
+    window.onload = loadDataFromServer;
 </script>
 </body>
 </html>
