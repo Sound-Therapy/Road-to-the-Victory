@@ -3,99 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.4</title>
+    <title>Mason's Victory Roadmap v1.4.6</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .app-container { width: 100%; max-width: 420px; text-align: center; }
         
         /* SAT Section */
-        .card-sat { background: white; padding: 25px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card-main { background: white; padding: 25px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .score-value { font-size: 5rem; font-weight: 900; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; line-height: 1; }
-        .btn { width: 100%; padding: 16px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; }
         
-        /* Predictor Section */
+        /* Prediction Section */
         .card-predict { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .predict-title { font-size: 1rem; color: #5f6368; margin-bottom: 10px; font-weight: 600; }
-        .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; margin-bottom: 5px; }
-        .chance-label { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; }
+        .chance-label { font-size: 0.9rem; color: #888; margin-top: 5px; font-weight: bold; }
 
-        /* Project Section */
-        .card-project { background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: left; overflow: hidden; }
-        .project-header { padding: 15px 20px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .project-title { font-size: 0.95rem; font-weight: bold; color: #1e3a8a; }
-        .project-content { display: none; padding: 10px 20px; border-top: 1px solid #eee; }
-        .project-content.show { display: block; }
-        
-        /* Checkbox Styling */
-        .check-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
-        .check-item:last-child { border-bottom: none; }
-        input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; accent-color: #1a73e8; cursor: pointer; }
-        .check-label { font-size: 0.9rem; color: #444; flex: 1; cursor: pointer; }
+        /* Project Section (Checklist) */
+        .card-project { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; }
+        .project-title { font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 10px; text-align: center; }
+        .check-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f1f1; }
+        input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; accent-color: #1a73e8; }
+        .check-label { font-size: 0.85rem; color: #444; cursor: pointer; }
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 300px; text-align: center; }
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
         
-        .admin-link { font-size: 0.6rem; color: #eee; cursor: pointer; margin-top: 20px; text-decoration: underline; background: none; border: none; }
+        .reset-btn { font-size: 0.6rem; color: #ddd; cursor: pointer; margin-top: 20px; background: none; border: none; text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="card-sat">
+    <div class="card-main">
         <div style="font-size: 0.8rem; color: #888;" id="display-date">Loading...</div>
         <div style="font-size: 1rem; font-weight: 600; color: #444; margin-top: 5px;">Mason's SAT Level 🚀</div>
         <div id="sat-score" class="score-value">----</div>
-        <button class="btn btn-primary" onclick="startPrep()">Collect Points</button>
+        <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
     </div>
 
     <div class="card-predict">
-        <div class="predict-title">🏛️ Top-Tier Admission Chance</div>
+        <div style="font-size: 0.9rem; color: #5f6368; font-weight: 600;">Top-Tier Admission Chance</div>
         <div id="chance-percent" class="chance-value">--%</div>
         <div id="chance-level" class="chance-label">calculating...</div>
     </div>
 
     <div class="card-project">
-        <div class="project-header" onclick="toggleProjectMenu()">
-            <div class="project-title">⚡ Passion Project: SoundBuddy</div>
-            <div id="project-arrow" style="color: #aaa; transition: 0.3s;">▼</div>
-        </div>
-        <div id="project-content" class="project-content">
-            <div class="check-item">
-                <input type="checkbox" id="proj-1" onchange="updateProjectState()">
-                <label for="proj-1" class="check-label">Complete SoundBuddy App (v1.0)</label>
-            </div>
-            <div class="check-item">
-                <input type="checkbox" id="proj-2" onchange="updateProjectState()">
-                <label for="proj-2" class="check-label">Participate in Science Competition</label>
-            </div>
-            <div class="check-item">
-                <input type="checkbox" id="proj-3" onchange="updateProjectState()">
-                <label for="proj-3" class="check-label">Award in Science Competition</label>
-            </div>
-            <div class="check-item">
-                <input type="checkbox" id="proj-4" onchange="updateProjectState()">
-                <label for="proj-4" class="check-label">Contact professional mentor</label>
-            </div>
-            <div class="check-item">
-                <input type="checkbox" id="proj-5" onchange="updateProjectState()">
-                <label for="proj-5" class="check-label">Collaboration with professional mentor</label>
-            </div>
-        </div>
+        <div class="project-title">⚡ Passion Project: SoundBuddy</div>
+        <div class="check-item"><input type="checkbox" id="p1" onchange="saveProject()"><label for="p1" class="check-label">Complete SoundBuddy App (+15%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p2" onchange="saveProject()"><label for="p2" class="check-label">Participate Science Competition (+5%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Award Science Competition (+15%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Contact any professional mentor (+5%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with any mentor (+10%)</label></div>
     </div>
 
-    <button class="admin-link" onclick="forceReset()">Admin: Reset to 1420</button>
+    <button class="reset-btn" onclick="resetTo1420()">Admin: Reset to 1420</button>
 </div>
 
 <div id="prepModal" class="modal">
     <div class="modal-content">
-        <h2 id="modal-title" style="color: #1a73e8; margin: 0 0 15px 0; font-size: 1.3rem;">Step</h2>
-        <p id="question-display" style="font-size: 1.1rem; color: #333; margin: 0; line-height: 1.4;"></p>
-        <div id="number-choice">
+        <h2 id="modal-title" style="color: #1a73e8; margin-bottom: 10px;">Step</h2>
+        <p id="question-display" style="font-size: 1.1rem; line-height: 1.4;"></p>
+        <div id="binary-choice" style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="handleBinary(true)">Yes</button>
+            <button class="btn" style="flex:1; background:#f1f1f1;" onclick="handleBinary(false)">No</button>
+        </div>
+        <div id="number-choice" style="display:none;">
             <input type="number" id="set-count" class="input-set" placeholder="How many?">
             <button class="btn btn-primary" onclick="handleNumber()">Next</button>
         </div>
@@ -116,28 +94,24 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let state = { 
-        score: 1420, 
-        lastUpdateDay: new Date().toDateString(), 
-        didCheckIn: false,
-        project: [false, false, false, false, false] // 프로젝트 체크 상태 저장
-    };
+    let state = { score: 1420, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false], history: [] };
     let currentStep = 0;
     let sessionPoints = 0;
 
-    const questions = [
-        "How many Math sets did you do today? (Including Mastery) 🔢",
-        "How many R&W sets did you do today? (Including Mastery) 🔢"
+    const flow = [
+        { q: "Did you do mastery challenge for math?", type: "binary", p: 1 },
+        { q: "How many math sets did you do today?", type: "number" },
+        { q: "Did you do mastery challenge for R&W?", type: "binary", p: 1 },
+        { q: "How many R&W sets did you do today?", type: "number" }
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_victory_data').once('value');
+        const snapshot = await db.ref('mason_v146').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
-            if(!state.project) state.project = [false, false, false, false, false]; // 구버전 호환성
             checkDailyGap();
         } else {
-            saveData();
+            resetTo1420(true);
         }
         updateUI();
     }
@@ -148,7 +122,8 @@
             const lastDate = new Date(state.lastUpdateDay);
             const diffDays = Math.floor(Math.abs(new Date(today) - lastDate) / (1000 * 60 * 60 * 24));
             if (diffDays >= 1 && !state.didCheckIn) {
-                state.score -= 5; // 미체크인 시 5점 감점
+                state.score -= 5;
+                state.history.push({ date: today, score: state.score });
             }
             state.lastUpdateDay = today;
             state.didCheckIn = false;
@@ -157,108 +132,80 @@
     }
 
     function startPrep() {
-        if (state.didCheckIn) return alert("All done for today! See you tomorrow! ✨");
+        if (state.didCheckIn) return alert("All set for today!");
         currentStep = 0; sessionPoints = 0;
         showStep();
         document.getElementById('prepModal').style.display = 'flex';
     }
 
     function showStep() {
-        document.getElementById('modal-title').innerText = `Step ${currentStep + 1}`;
-        document.getElementById('question-display').innerText = questions[currentStep];
-        document.getElementById('set-count').value = "";
-        document.getElementById('set-count').focus();
+        const item = flow[currentStep];
+        document.getElementById('question-display').innerText = item.q;
+        document.getElementById('binary-choice').style.display = item.type === "binary" ? "flex" : "none";
+        document.getElementById('number-choice').style.display = item.type === "number" ? "block" : "none";
+        if(item.type === "number") document.getElementById('set-count').value = "";
+    }
+
+    function handleBinary(isYes) {
+        if (isYes) sessionPoints += flow[currentStep].p;
+        currentStep++;
+        if (currentStep < flow.length) showStep(); else finish();
     }
 
     function handleNumber() {
-        const val = parseInt(document.getElementById('set-count').value) || 0;
-        sessionPoints += val; 
+        sessionPoints += (parseInt(document.getElementById('set-count').value) || 0);
         currentStep++;
-        if (currentStep < questions.length) showStep();
-        else finishSession();
+        if (currentStep < flow.length) showStep(); else finish();
     }
 
-    function finishSession() {
+    function finish() {
         state.score += sessionPoints;
         state.didCheckIn = true;
         saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(`Good job Mason! +${sessionPoints} points added. Check your new Admission Chance!`);
+        alert(`Finished! +${sessionPoints} points.`);
     }
 
-    function toggleProjectMenu() {
-        const content = document.getElementById('project-content');
-        const arrow = document.getElementById('project-arrow');
-        content.classList.toggle('show');
-        arrow.style.transform = content.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-
-    function updateProjectState() {
-        for(let i=0; i<5; i++) {
-            state.project[i] = document.getElementById(`proj-${i+1}`).checked;
-        }
+    function updateProject() {
+        for(let i=0; i<5; i++) state.project[i] = document.getElementById(`p${i+1}`).checked;
         saveData();
     }
+    window.saveProject = updateProject; // 구버전 호환용
 
-    function calculateAdmissionChance() {
-        let baseChance = 5; // 기본 확률 (탑티어는 바늘구멍이니까요)
+    function calculateChance() {
+        let chance = 5; // Base
+        // SAT Score (Max 50)
+        if (state.score >= 1600) chance += 50;
+        else if (state.score >= 1550) chance += 35;
+        else if (state.score >= 1500) chance += 20;
+        else if (state.score >= 1420) chance += 5;
 
-        // 1. SAT 점수 가중치 (1600점에 가까울수록 기하급수적으로 상승)
-        // 1420점= +5%, 1500점= +20%, 1550점= +35%, 1600점= +50% 로직
-        if (state.score >= 1420) baseChance += 5;
-        if (state.score >= 1500) baseChance += 15; // 누적 +20%
-        if (state.score >= 1550) baseChance += 15; // 누적 +35%
-        if (state.score >= 1580) baseChance += 10; // 누적 +45%
-        if (state.score >= 1600) baseChance += 5;  // 누적 +50%
+        // Project (Max 50)
+        const pPoints = [15, 5, 15, 5, 10];
+        for(let i=0; i<5; i++) if(state.project[i]) chance += pPoints[i];
 
-        // 2. 사운드버디 프로젝트 가중치 (각 항목당 중요도에 따라 차등 부여)
-        const projPoints = [15, 5, 15, 5, 10]; // 총 +50%
-        for(let i=0; i<5; i++) {
-            if(state.project[i]) baseChance += projPoints[i];
-        }
-
-        // 최종 확률 (최대 99% 제한, 100%는 없으니까요)
-        let finalChance = Math.min(baseChance, 99);
-        updatePredictorUI(finalChance);
+        const final = Math.min(chance, 99);
+        document.getElementById('chance-percent').innerText = `${final}%`;
+        document.getElementById('chance-level').innerText = final >= 80 ? "IVY LEAGUE MATERIAL" : final >= 50 ? "STRONG CANDIDATE" : "KEEP PUSHING";
+        document.getElementById('chance-percent').style.color = final >= 80 ? "#34a853" : final >= 50 ? "#1a73e8" : "#ea4335";
     }
 
-    function updatePredictorUI(chance) {
-        document.getElementById('chance-percent').innerText = `${chance}%`;
-        
-        let level = "REACHING FOR THE STARS";
-        let color = "#888"; // 기본 회색
-
-        if(chance >= 80) { level = "IVY LEAGUE MATERIAL"; color = "#34a853"; } // 초록
-        else if(chance >= 60) { level = "STRONG CANDIDATE"; color = "#1a73e8"; } // 파랑
-        else if(chance >= 40) { level = "COMPETITIVE TIER"; color = "#f9ab00"; } // 주황
-        else if(chance >= 20) { level = "KEEP PUSHING"; color = "#ea4335"; } // 빨강
-
-        document.getElementById('chance-percent').style.color = color;
-        document.getElementById('chance-level').innerText = level;
-    }
-
-    function forceReset() {
-        if(!confirm("정말로 1420점으로 초기화하시겠습니까? (테스트용)")) return;
-        state = { score: 1420, lastUpdateDay: new Date().toDateString(), didCheckIn: true, project: [false, false, false, false, false] };
+    function resetTo1420(isInit = false) {
+        if(!isInit && !confirm("Reset all to 1420?")) return;
+        state = { score: 1420, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false], history: [] };
         saveData();
     }
 
     function saveData() {
-        db.ref('mason_victory_data').set(state);
+        db.ref('mason_v146').set(state);
         updateUI();
     }
 
     function updateUI() {
         document.getElementById('sat-score').innerText = state.score;
-        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        
-        // 프로젝트 체크박스 상태 업데이트
-        for(let i=0; i<5; i++) {
-            document.getElementById(`proj-${i+1}`).checked = state.project[i];
-        }
-        
-        // UI 업데이트 후 확률 다시 계산
-        calculateAdmissionChance();
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        for(let i=0; i<5; i++) document.getElementById(`p${i+1}`).checked = state.project[i] || false;
+        calculateChance();
     }
 
     window.onload = loadData;
