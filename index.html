@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.1</title>
+    <title>Mason's Victory Roadmap v1.4.2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        body { font-family: 'Arial', sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .app-container { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
         .header { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
         .score-value { font-size: 5rem; font-weight: 800; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; }
@@ -16,15 +16,18 @@
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
         .chart-container { margin-top: 30px; padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #eee; display: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
-        .choice-btn { width: 48%; padding: 12px; border: 1px solid #dadce0; border-radius: 10px; background: white; cursor: pointer; font-weight: bold; }
+        .choice-btn-group { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        .choice-btn { flex: 1; padding: 15px; border: 1px solid #dadce0; border-radius: 12px; background: white; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .btn-yes { background-color: #1a73e8; color: white; border: none; }
         .predictor-card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .input-item { text-align: left; margin-bottom: 15px; }
         label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+        select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         #result-box { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; text-align: center; }
         .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; }
+        .version-tag { font-size: 0.7rem; color: #ccc; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -40,76 +43,21 @@
     <div id="history-section" class="chart-container">
         <canvas id="scoreChart"></canvas>
     </div>
-</div>
-
-<div class="predictor-card">
-    <h2 style="color: #1e3a8a; margin-top: 0; text-align: center;">🏛️ Top 20 Predictor</h2>
-    <div class="input-item">
-        <label>GPA (Unweighted)</label>
-        <select id="p-gpa"><option value="20">3.9+ (+20)</option><option value="15">3.7-3.89 (+15)</option><option value="0">Below 3.7 (+0)</option></select>
-    </div>
-    <div class="input-item">
-        <label>Number of AP/Honors</label>
-        <input type="number" id="p-ap" placeholder="e.g. 6">
-    </div>
-    <div class="input-item">
-        <label>SoundBuddy Project (App Development)</label>
-        <select id="p-project">
-            <option value="50">National Award (+50)</option>
-            <option value="35">State Award (+35)</option>
-            <option value="20">Regional Award (+20)</option>
-            <option value="10">Development Started (+10)</option>
-            <option value="0">Not Started / No Project (+0)</option>
-        </select>
-    </div>
-    <div class="input-item">
-        <label>Personal Essay (The Story)</label>
-        <select id="p-essay">
-            <option value="40">Masterpiece (Emotional/Funny) (+40)</option>
-            <option value="20">Strong Personal Story (+20)</option>
-            <option value="5">Standard Application Essay (+5)</option>
-            <option value="0">Not Started (+0)</option>
-        </select>
-    </div>
-    <div class="input-item">
-        <label>External Industry Experts (Non-School Recommendations)</label>
-        <select id="p-recs">
-            <option value="30">3+ High-Impact Field Experts (+30)</option>
-            <option value="15">2 External Industry Mentors (+15)</option>
-            <option value="10">1 External Industry Mentor (+10)</option>
-            <option value="0">None (+0)</option>
-        </select>
-    </div>
-    <div class="input-item">
-        <label>Jazz Band Achievement</label>
-        <select id="p-jazz">
-            <option value="30">National Level (+30)</option>
-            <option value="10">State Level (+10)</option>
-            <option value="5">District Level (+5)</option>
-            <option value="0">None (+0)</option>
-        </select>
-    </div>
-    <button class="btn btn-primary" style="background: #1e293b;" onclick="runPredictor()">Calculate Admission Chance</button>
-    <div id="result-box">
-        <div id="res-score" style="font-weight: bold;">Score: 0</div>
-        <div id="res-rank" style="font-size: 1.5rem; font-weight: 800; margin: 5px 0;">RANK</div>
-        <div id="res-msg" style="font-size: 0.9rem;">Message</div>
-    </div>
+    <div class="version-tag">v1.4.2 | Score Fixed at 1420</div>
 </div>
 
 <div id="prepModal" class="modal">
     <div class="modal-content">
         <h2 id="modal-title" style="color: #1a73e8; margin-top: 0;">Math</h2>
-        <p id="question-display" style="font-size: 1.1rem; line-height: 1.5;">Loading...</p>
-        <div style="display: flex; justify-content: space-between;">
-            <button class="choice-btn" onclick="handleChoice(true)">Yes</button>
+        <p id="question-display" style="font-size: 1.1rem; line-height: 1.5; color: #333;"></p>
+        <div class="choice-btn-group">
+            <button class="choice-btn btn-yes" onclick="handleChoice(true)">Yes</button>
             <button class="choice-btn" onclick="handleChoice(false)">No</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 1. Firebase Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyAoLonGkvQrPpNk5Rl8vJvR-eNg63xUPO4",
         authDomain: "road-to-the-victory-mason.firebaseapp.com",
@@ -123,12 +71,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 시작 점수를 1405로 설정
+    // 초기 상태 1420점으로 강제 설정
     let state = {
-        score: 1405, 
+        score: 1420, 
         lastUpdateDay: new Date().toDateString(),
         didCheckIn: false,
-        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1405}]
+        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1420}]
     };
 
     let chartInstance = null;
@@ -137,47 +85,56 @@
 
     const questions = {
         1: "Did you complete your assigned Khan Academy Math units today?",
-        2: "Did you transfer every mistake to your 'Error Note' and analyze the logic behind them?",
+        2: "Did you transfer every mistake to your 'Error Note' and analyze the logic?",
         3: "Did you complete your Khan Academy 'Reading & Writing' practice today?",
-        4: "Did you review the 'Answer Explanations' and summarize the logic in your note?",
+        4: "Did you review the 'Answer Explanations' and summarize the logic?",
         5: "Did you complete your physical training? (Squats & Push-ups)"
     };
 
-    function loadDataFromServer() {
-        db.ref('mason_sat_data').once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                state = snapshot.val();
-                checkDailyGap();
-            } else {
-                saveDataToServer(); 
-            }
-            updateUI();
-        });
-    }
-
-    function saveDataToServer() {
-        db.ref('mason_sat_data').set(state);
+    async function loadDataFromServer() {
+        const snapshot = await db.ref('mason_sat_data').once('value');
+        if (snapshot.exists()) {
+            const serverData = snapshot.val();
+            // 점수가 비정상적이거나 1420점 미만이면 1420점으로 보정
+            state.score = (serverData.score < 1420) ? 1420 : serverData.score;
+            state.lastUpdateDay = serverData.lastUpdateDay || new Date().toDateString();
+            state.didCheckIn = serverData.didCheckIn || false;
+            state.history = serverData.history || state.history;
+            checkDailyGap();
+        } else {
+            saveDataToServer(); 
+        }
+        updateUI();
     }
 
     function checkDailyGap() {
         const todayStr = new Date().toDateString();
         if (todayStr !== state.lastUpdateDay) {
             const lastDate = new Date(state.lastUpdateDay);
-            const diffDays = Math.ceil(Math.abs(new Date(todayStr) - lastDate) / (1000 * 60 * 60 * 24));
+            // Math.floor를 사용하여 24시간이 완전히 지나야 하루로 계산
+            const diffDays = Math.floor(Math.abs(new Date(todayStr) - lastDate) / (1000 * 60 * 60 * 24));
+            
             if (diffDays >= 1) {
-                for(let i = (state.didCheckIn ? 1 : 0); i < diffDays; i++) {
+                let penaltyStart = state.didCheckIn ? 1 : 0;
+                for(let i = penaltyStart; i < diffDays; i++) {
                     state.score -= 4;
-                    let mDate = new Date(lastDate); mDate.setDate(lastDate.getDate() + i);
+                    let mDate = new Date(lastDate); mDate.setDate(lastDate.getDate() + i + 1);
                     state.history.push({ date: mDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
                 }
             }
-            state.lastUpdateDay = todayStr; state.didCheckIn = false;
-            saveDataToServer(); updateUI();
+            state.lastUpdateDay = todayStr;
+            state.didCheckIn = false;
+            saveDataToServer();
         }
     }
 
+    function saveDataToServer() {
+        db.ref('mason_sat_data').set(state);
+        updateUI();
+    }
+
     function startPrep() {
-        if (state.didCheckIn) return alert("Already updated for today!");
+        if (state.didCheckIn) return alert("Already updated for today! See you tomorrow!");
         currentStep = 1; sessionPoints = 0; showQuestion();
         document.getElementById('prepModal').style.display = 'flex';
     }
@@ -191,51 +148,27 @@
     }
 
     function handleChoice(isYes) {
-        if (isYes) sessionPoints += 1;
+        if (isYes) sessionPoints += 2; // 한 질문당 2점씩 (총 10점 가능하도록 상향)
         currentStep++;
         if (currentStep > 5) finishSession();
         else showQuestion();
     }
 
     function finishSession() {
+        document.getElementById('prepModal').style.display = 'none';
         state.score += sessionPoints;
         state.didCheckIn = true;
-        state.history.push({ date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
-        saveDataToServer(); updateUI();
-        document.getElementById('prepModal').style.display = 'none';
-        if(chartInstance) initChart();
+        state.history.push({ 
+            date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), 
+            score: state.score 
+        });
+        saveDataToServer();
+        alert(`Good job Mason! +${sessionPoints} points added.`);
     }
 
     function updateUI() {
         document.getElementById('sat-score').innerText = state.score;
         document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
-
-    function runPredictor() {
-        let total = 0;
-        if (state.score >= 1550) total += 20; else if (state.score >= 1500) total += 15;
-        total += parseInt(document.getElementById('p-gpa').value);
-        total += (parseInt(document.getElementById('p-ap').value) || 0) * 2.5;
-        total += parseInt(document.getElementById('p-project').value);
-        total += parseInt(document.getElementById('p-essay').value);
-        total += parseInt(document.getElementById('p-recs').value);
-        total += parseInt(document.getElementById('p-jazz').value);
-
-        const box = document.getElementById('result-box');
-        const rRank = document.getElementById('res-rank');
-        box.style.display = "block";
-        document.getElementById('res-score').innerText = `Total Score: ${total}`;
-
-        if (total >= 180) {
-            box.className = "rank-chosen"; rRank.innerText = "THE CHOSEN ONE";
-            document.getElementById('res-msg').innerText = "Top 20 Universities are waiting for you.";
-        } else if (total >= 150) {
-            box.className = ""; box.style.background = "#dcfce7"; rRank.innerText = "IVY LEAGUE TIER";
-            document.getElementById('res-msg').innerText = "Very strong! Add one more National hook.";
-        } else {
-            box.className = ""; box.style.background = "#f1f5f9"; rRank.innerText = "KEEP PUSHING";
-            document.getElementById('res-msg').innerText = "Focus on SAT 1550+ and your Project.";
-        }
     }
 
     function toggleHistory() {
@@ -250,8 +183,8 @@
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: state.history.map(h => h.date),
-                datasets: [{ label: 'Score', data: state.history.map(h => h.score), borderColor: '#1a73e8', tension: 0.3 }]
+                labels: state.history.slice(-10).map(h => h.date),
+                datasets: [{ label: 'SAT Score', data: state.history.slice(-10).map(h => h.score), borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }]
             }
         });
     }
