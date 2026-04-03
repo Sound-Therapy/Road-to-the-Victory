@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.2</title>
+    <title>Mason's Victory Roadmap v1.4.3</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -15,44 +15,46 @@
         .btn { width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: #f8f9fa; color: #5f6368; border: 1px solid #dadce0; }
-        .chart-container { margin-top: 30px; padding: 15px; background: #fff; border-radius: 15px; border: 1px solid #eee; display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; }
         .choice-btn-group { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .choice-btn { flex: 1; padding: 15px; border: 1px solid #dadce0; border-radius: 12px; background: white; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .choice-btn { flex: 1; padding: 15px; border: 1px solid #dadce0; border-radius: 12px; background: white; cursor: pointer; font-weight: bold; }
         .btn-yes { background-color: #1a73e8; color: white; border: none; }
-        .predictor-card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .input-item { text-align: left; margin-bottom: 15px; }
-        label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        #result-box { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; text-align: center; }
-        .rank-chosen { background: linear-gradient(135deg, #ffd700, #f59e0b); color: white; }
-        .version-tag { font-size: 0.7rem; color: #ccc; margin-top: 15px; }
+        .input-set { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; outline: none; }
+        .reset-link { margin-top: 30px; font-size: 0.65rem; color: #eee; cursor: pointer; text-decoration: underline; border: none; background: none; }
+        .reset-link:hover { color: #ccc; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header" id="display-date">Loading...</div>
-    <div style="font-size: 1.1rem; color: #444;">Current Estimated SAT Score</div>
+    <div style="font-size: 1.1rem; color: #444;">Mason's SAT Level 🚀</div>
     <div id="sat-score" class="score-value">----</div>
     
     <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
-    <button class="btn btn-secondary" onclick="toggleHistory()">View History & Graph</button>
+    <button class="btn btn-secondary" onclick="toggleHistory()">Growth History</button>
 
-    <div id="history-section" class="chart-container">
+    <div id="history-section" style="display:none; margin-top:20px; width:100%;">
         <canvas id="scoreChart"></canvas>
     </div>
-    <div class="version-tag">v1.4.2 | Score Fixed at 1420</div>
+
+    <button class="reset-link" onclick="forceReset()">Admin: Reset to 1420</button>
 </div>
 
 <div id="prepModal" class="modal">
     <div class="modal-content">
-        <h2 id="modal-title" style="color: #1a73e8; margin-top: 0;">Math</h2>
-        <p id="question-display" style="font-size: 1.1rem; line-height: 1.5; color: #333;"></p>
-        <div class="choice-btn-group">
-            <button class="choice-btn btn-yes" onclick="handleChoice(true)">Yes</button>
-            <button class="choice-btn" onclick="handleChoice(false)">No</button>
+        <h2 id="modal-title" style="color: #1a73e8; margin-top: 0;">Step 1</h2>
+        <p id="question-display" style="font-size: 1.1rem; line-height: 1.4;"></p>
+        
+        <div id="binary-choice" class="choice-btn-group">
+            <button class="choice-btn btn-yes" onclick="handleBinary(true)">Yes! 🎉</button>
+            <button class="choice-btn" onclick="handleBinary(false)">No</button>
+        </div>
+
+        <div id="number-choice" style="display:none;">
+            <input type="number" id="set-count" class="input-set" placeholder="How many?">
+            <button class="btn btn-primary" style="margin-top:15px;" onclick="handleNumber()">Next</button>
         </div>
     </div>
 </div>
@@ -71,38 +73,24 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 초기 상태 1420점으로 강제 설정
-    let state = {
-        score: 1420, 
-        lastUpdateDay: new Date().toDateString(),
-        didCheckIn: false,
-        history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1420}]
-    };
-
-    let chartInstance = null;
-    let currentStep = 1; 
+    let state = { score: 1420, lastUpdateDay: new Date().toDateString(), didCheckIn: false, history: [] };
+    let currentStep = 0;
     let sessionPoints = 0;
 
-    const questions = {
-        1: "Did you complete your assigned Khan Academy Math units today?",
-        2: "Did you transfer every mistake to your 'Error Note' and analyze the logic?",
-        3: "Did you complete your Khan Academy 'Reading & Writing' practice today?",
-        4: "Did you review the 'Answer Explanations' and summarize the logic?",
-        5: "Did you complete your physical training? (Squats & Push-ups)"
-    };
+    const flow = [
+        { q: "Did you do Mastery Challenge for Math? ✏️", type: "binary", points: 1 },
+        { q: "How many Math sets did you do today? 🔢", type: "number" },
+        { q: "Did you do Mastery Challenge for Reading/Writing? 📚", type: "binary", points: 1 },
+        { q: "How many R&W sets did you do today? 🔢", type: "number" }
+    ];
 
-    async function loadDataFromServer() {
+    async function loadData() {
         const snapshot = await db.ref('mason_sat_data').once('value');
         if (snapshot.exists()) {
-            const serverData = snapshot.val();
-            // 점수가 비정상적이거나 1420점 미만이면 1420점으로 보정
-            state.score = (serverData.score < 1420) ? 1420 : serverData.score;
-            state.lastUpdateDay = serverData.lastUpdateDay || new Date().toDateString();
-            state.didCheckIn = serverData.didCheckIn || false;
-            state.history = serverData.history || state.history;
+            state = snapshot.val();
             checkDailyGap();
         } else {
-            saveDataToServer(); 
+            forceReset(); // 데이터 없으면 1420으로 시작
         }
         updateUI();
     }
@@ -111,59 +99,84 @@
         const todayStr = new Date().toDateString();
         if (todayStr !== state.lastUpdateDay) {
             const lastDate = new Date(state.lastUpdateDay);
-            // Math.floor를 사용하여 24시간이 완전히 지나야 하루로 계산
             const diffDays = Math.floor(Math.abs(new Date(todayStr) - lastDate) / (1000 * 60 * 60 * 24));
             
             if (diffDays >= 1) {
+                // 어제 체크인을 안했다면 무조건 5점 감점
                 let penaltyStart = state.didCheckIn ? 1 : 0;
                 for(let i = penaltyStart; i < diffDays; i++) {
-                    state.score -= 4;
+                    state.score -= 5; // 5점 감점으로 변경
                     let mDate = new Date(lastDate); mDate.setDate(lastDate.getDate() + i + 1);
                     state.history.push({ date: mDate.toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
                 }
             }
             state.lastUpdateDay = todayStr;
             state.didCheckIn = false;
-            saveDataToServer();
+            saveData();
         }
     }
 
-    function saveDataToServer() {
-        db.ref('mason_sat_data').set(state);
-        updateUI();
-    }
-
     function startPrep() {
-        if (state.didCheckIn) return alert("Already updated for today! See you tomorrow!");
-        currentStep = 1; sessionPoints = 0; showQuestion();
+        if (state.didCheckIn) return alert("All set for today! ✨");
+        currentStep = 0; sessionPoints = 0;
+        showStep();
         document.getElementById('prepModal').style.display = 'flex';
     }
 
-    function showQuestion() {
-        let title = "Math";
-        if (currentStep >= 3 && currentStep <= 4) title = "ELA";
-        if (currentStep === 5) title = "Physical";
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('question-display').innerText = questions[currentStep];
+    function showStep() {
+        const item = flow[currentStep];
+        document.getElementById('question-display').innerText = item.q;
+        if (item.type === "binary") {
+            document.getElementById('binary-choice').style.display = 'flex';
+            document.getElementById('number-choice').style.display = 'none';
+        } else {
+            document.getElementById('binary-choice').style.display = 'none';
+            document.getElementById('number-choice').style.display = 'block';
+            document.getElementById('set-count').value = "";
+            document.getElementById('set-count').focus();
+        }
     }
 
-    function handleChoice(isYes) {
-        if (isYes) sessionPoints += 2; // 한 질문당 2점씩 (총 10점 가능하도록 상향)
+    function handleBinary(isYes) {
+        if (isYes) sessionPoints += flow[currentStep].points;
+        nextStep();
+    }
+
+    function handleNumber() {
+        const val = parseInt(document.getElementById('set-count').value) || 0;
+        sessionPoints += val; // 1세트당 1점
+        nextStep();
+    }
+
+    function nextStep() {
         currentStep++;
-        if (currentStep > 5) finishSession();
-        else showQuestion();
+        if (currentStep < flow.length) showStep();
+        else finishSession();
     }
 
     function finishSession() {
-        document.getElementById('prepModal').style.display = 'none';
         state.score += sessionPoints;
         state.didCheckIn = true;
-        state.history.push({ 
-            date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), 
-            score: state.score 
-        });
-        saveDataToServer();
-        alert(`Good job Mason! +${sessionPoints} points added.`);
+        state.history.push({ date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: state.score });
+        saveData();
+        document.getElementById('prepModal').style.display = 'none';
+        alert(`Excellent work! +${sessionPoints} points added.`);
+    }
+
+    function forceReset() {
+        if(!confirm("정말로 1420점으로 초기화하시겠습니까? 테스트 데이터가 모두 삭제됩니다.")) return;
+        state = {
+            score: 1420,
+            lastUpdateDay: new Date().toDateString(),
+            didCheckIn: false,
+            history: [{date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}), score: 1420}]
+        };
+        saveData();
+    }
+
+    function saveData() {
+        db.ref('mason_sat_data').set(state);
+        updateUI();
     }
 
     function updateUI() {
@@ -173,23 +186,10 @@
 
     function toggleHistory() {
         const s = document.getElementById('history-section');
-        s.style.display = (s.style.display === 'block') ? 'none' : 'block';
-        if (s.style.display === 'block') initChart();
+        s.style.display = (s.style.display === 'none') ? 'block' : 'none';
     }
 
-    function initChart() {
-        const ctx = document.getElementById('scoreChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: state.history.slice(-10).map(h => h.date),
-                datasets: [{ label: 'SAT Score', data: state.history.slice(-10).map(h => h.score), borderColor: '#1a73e8', tension: 0.3, fill: true, backgroundColor: 'rgba(26, 115, 232, 0.1)' }]
-            }
-        });
-    }
-
-    window.onload = loadDataFromServer;
+    window.onload = loadData;
 </script>
 </body>
 </html>
