@@ -3,51 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.7</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Mason's Victory Roadmap v1.4.8</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 15px; margin: 0; }
         .app-container { width: 100%; max-width: 420px; text-align: center; }
-        .card-main { background: white; padding: 25px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .score-value { font-size: 5rem; font-weight: 900; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; line-height: 1; }
         .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; }
-        .card-predict { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; }
-        .card-project { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left; }
-        .check-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f1f1; }
-        input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; accent-color: #1a73e8; }
+        .project-title { font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 12px; }
+        .check-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; text-align: left; }
+        input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; accent-color: #1a73e8; }
+        .check-label { font-size: 0.85rem; color: #444; flex: 1; }
+        .point-tag { font-size: 0.7rem; color: #1a73e8; font-weight: bold; background: #e8f0fe; padding: 2px 6px; border-radius: 5px; margin-left: 5px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 300px; text-align: center; }
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
-        .reset-btn { font-size: 0.6rem; color: #ddd; cursor: pointer; margin-top: 20px; background: none; border: none; text-decoration: underline; }
+        .reset-btn { font-size: 0.6rem; color: #ccc; cursor: pointer; margin-top: 20px; background: none; border: none; text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="card-main">
+    <div class="card">
         <div style="font-size: 0.8rem; color: #888;" id="display-date">Loading...</div>
         <div style="font-size: 1rem; font-weight: 600; color: #444; margin-top: 5px;">Mason's SAT Level 🚀</div>
         <div id="sat-score" class="score-value">----</div>
         <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
     </div>
 
-    <div class="card-predict">
+    <div class="card">
         <div style="font-size: 0.9rem; color: #5f6368; font-weight: 600;">Top-Tier Admission Chance</div>
         <div id="chance-percent" class="chance-value">--%</div>
-        <div id="chance-level" style="font-size: 0.9rem; color: #888; font-weight: bold;">calculating...</div>
+        <div id="chance-level" style="font-size: 0.9rem; color: #888; font-weight: bold; margin-top: 5px;">calculating...</div>
     </div>
 
-    <div class="card-project">
-        <div style="font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 10px; text-align: center;">⚡ Passion Project: SoundBuddy</div>
-        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1">Complete SoundBuddy App (+15%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2">Participate Science Competition (+5%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3">Award Science Competition (+15%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4">Contact professional mentor (+5%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5">Collaboration with mentor (+10%)</label></div>
+    <div class="card" style="text-align: left;">
+        <div class="project-title">⚡ Passion Project: SoundBuddy</div>
+        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1" class="check-label">Complete SoundBuddy App <span class="point-tag">+5%</span></label></div>
+        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2" class="check-label">Participate Science Competition <span class="point-tag">+10%</span></label></div>
+        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Award Science Competition <span class="point-tag">+30%</span></label></div>
+        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Contact professional mentor <span class="point-tag">+5%</span></label></div>
+        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with mentor <span class="point-tag">+30%</span></label></div>
     </div>
 
     <button class="reset-btn" onclick="resetTo1424()">Admin: Reset to 1424</button>
@@ -86,16 +86,15 @@
     let currentStep = 0;
     let sessionPoints = 0;
 
-    // 질문 순서 정의
     const flow = [
-        { id: 'math_m', q: "Did you do mastery challenge for math?", type: "binary", p: 1 },
+        { id: 'math_m', q: "Did you do mastery challenge for math?", type: "binary" },
         { id: 'math_s', q: "How many math sets did you do today?", type: "number" },
-        { id: 'ela_m', q: "Did you do mastery challenge for SAT R&W?", type: "binary", p: 1 },
+        { id: 'ela_m', q: "Did you do mastery challenge for SAT R&W?", type: "binary" },
         { id: 'ela_s', q: "How many R&W sets did you do today?", type: "number" }
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_v147').once('value');
+        const snapshot = await db.ref('mason_v148').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
             checkDailyGap();
@@ -134,20 +133,13 @@
 
     function handleBinary(isYes) {
         const currentId = flow[currentStep].id;
-        
         if (isYes) {
             sessionPoints += 1;
-            currentStep++; // 다음 질문(세트 수 묻기)으로 이동
+            currentStep++;
         } else {
-            // Mastery를 안 했을 경우
-            if (currentId === 'math_m') {
-                currentStep = 2; // Math 세트 건너뛰고 ELA Mastery로 바로 이동
-            } else if (currentId === 'ela_m') {
-                finish(); // ELA Mastery도 안 하면 즉시 종료 (0점)
-                return;
-            }
+            if (currentId === 'math_m') currentStep = 2;
+            else if (currentId === 'ela_m') { finish(); return; }
         }
-        
         if (currentStep < flow.length) showStep(); else finish();
     }
 
@@ -162,7 +154,7 @@
         state.didCheckIn = true;
         saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(sessionPoints > 0 ? `Good job! +${sessionPoints} points.` : "No points earned today. Don't forget Mastery Challenges!");
+        alert(sessionPoints > 0 ? `Finished! +${sessionPoints} points.` : "No points earned today.");
     }
 
     function updateProject() {
@@ -171,18 +163,24 @@
     }
 
     function calculateChance() {
-        let chance = 5;
-        if (state.score >= 1600) chance += 50;
-        else if (state.score >= 1550) chance += 35;
-        else if (state.score >= 1500) chance += 20;
-        else if (state.score >= 1420) chance += 5;
+        // 1. SAT Logic (1450-1550구간, 0.5점씩 차등)
+        let satPoints = 0;
+        if (state.score >= 1550) {
+            satPoints = 50;
+        } else if (state.score > 1450) {
+            satPoints = (state.score - 1450) * 0.5;
+        }
 
-        const pPoints = [15, 5, 15, 5, 10];
-        for(let i=0; i<5; i++) if(state.project[i]) chance += pPoints[i];
+        // 2. Project Logic (Custom points)
+        let projPoints = 0;
+        const weights = [5, 10, 30, 5, 30];
+        for(let i=0; i<5; i++) if(state.project[i]) projPoints += weights[i];
 
-        const final = Math.min(chance, 99);
-        document.getElementById('chance-percent').innerText = `${final}%`;
-        document.getElementById('chance-level').innerText = final >= 80 ? "IVY LEAGUE MATERIAL" : final >= 50 ? "STRONG CANDIDATE" : "KEEP PUSHING";
+        const totalChance = Math.min(Math.round(satPoints + projPoints), 100);
+        
+        document.getElementById('chance-percent').innerText = `${totalChance}%`;
+        document.getElementById('chance-level').innerText = totalChance >= 85 ? "TOP TIER MATERIAL" : totalChance >= 60 ? "STRONG CANDIDATE" : "KEEP WORKING";
+        document.getElementById('chance-percent').style.color = totalChance >= 85 ? "#34a853" : totalChance >= 60 ? "#1a73e8" : "#ea4335";
     }
 
     function resetTo1424(isInit = false) {
@@ -192,7 +190,7 @@
     }
 
     function saveData() {
-        db.ref('mason_v147').set(state);
+        db.ref('mason_v148').set(state);
         updateUI();
     }
 
