@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.8</title>
+    <title>Mason's Victory Roadmap v1.4.9</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -14,11 +14,9 @@
         .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; }
-        .project-title { font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 12px; }
         .check-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; text-align: left; }
         input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; accent-color: #1a73e8; }
         .check-label { font-size: 0.85rem; color: #444; flex: 1; }
-        .point-tag { font-size: 0.7rem; color: #1a73e8; font-weight: bold; background: #e8f0fe; padding: 2px 6px; border-radius: 5px; margin-left: 5px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 300px; text-align: center; }
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
@@ -42,12 +40,12 @@
     </div>
 
     <div class="card" style="text-align: left;">
-        <div class="project-title">⚡ Passion Project: SoundBuddy</div>
-        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1" class="check-label">Complete SoundBuddy App <span class="point-tag">+5%</span></label></div>
-        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2" class="check-label">Participate Science Competition <span class="point-tag">+10%</span></label></div>
-        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Award Science Competition <span class="point-tag">+30%</span></label></div>
-        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Contact professional mentor <span class="point-tag">+5%</span></label></div>
-        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with mentor <span class="point-tag">+30%</span></label></div>
+        <div style="font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 12px; text-align: center;">⚡ Passion Project: SoundBuddy</div>
+        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1" class="check-label">Complete SoundBuddy App (+5%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2" class="check-label">Participate Science Competition (+10%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Award Science Competition (+30%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Contact professional mentor (+5%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with mentor (+30%)</label></div>
     </div>
 
     <button class="reset-btn" onclick="resetTo1424()">Admin: Reset to 1424</button>
@@ -90,11 +88,12 @@
         { id: 'math_m', q: "Did you do mastery challenge for math?", type: "binary" },
         { id: 'math_s', q: "How many math sets did you do today?", type: "number" },
         { id: 'ela_m', q: "Did you do mastery challenge for SAT R&W?", type: "binary" },
-        { id: 'ela_s', q: "How many R&W sets did you do today?", type: "number" }
+        { id: 'ela_s', q: "How many R&W sets did you do today?", type: "number" },
+        { id: 'workout', q: "Did you do push ups and squads? 💪", type: "binary", p: 1 }
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_v148').once('value');
+        const snapshot = await db.ref('mason_v149').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
             checkDailyGap();
@@ -133,13 +132,21 @@
 
     function handleBinary(isYes) {
         const currentId = flow[currentStep].id;
+        
         if (isYes) {
             sessionPoints += 1;
             currentStep++;
         } else {
-            if (currentId === 'math_m') currentStep = 2;
-            else if (currentId === 'ela_m') { finish(); return; }
+            // No를 선택했을 때의 분기
+            if (currentId === 'math_m') {
+                currentStep = 2; // Math 세트 건너뛰고 ELA Mastery로
+            } else if (currentId === 'ela_m') {
+                currentStep = 4; // ELA 세트 건너뛰고 바로 운동 질문으로
+            } else if (currentId === 'workout') {
+                currentStep++; // 그냥 다음(종료)으로
+            }
         }
+        
         if (currentStep < flow.length) showStep(); else finish();
     }
 
@@ -154,7 +161,7 @@
         state.didCheckIn = true;
         saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(sessionPoints > 0 ? `Finished! +${sessionPoints} points.` : "No points earned today.");
+        alert(`Finished! You earned ${sessionPoints} points today.`);
     }
 
     function updateProject() {
@@ -163,24 +170,17 @@
     }
 
     function calculateChance() {
-        // 1. SAT Logic (1450-1550구간, 0.5점씩 차등)
         let satPoints = 0;
-        if (state.score >= 1550) {
-            satPoints = 50;
-        } else if (state.score > 1450) {
-            satPoints = (state.score - 1450) * 0.5;
-        }
+        if (state.score >= 1550) satPoints = 50;
+        else if (state.score > 1450) satPoints = (state.score - 1450) * 0.5;
 
-        // 2. Project Logic (Custom points)
         let projPoints = 0;
         const weights = [5, 10, 30, 5, 30];
         for(let i=0; i<5; i++) if(state.project[i]) projPoints += weights[i];
 
         const totalChance = Math.min(Math.round(satPoints + projPoints), 100);
-        
         document.getElementById('chance-percent').innerText = `${totalChance}%`;
         document.getElementById('chance-level').innerText = totalChance >= 85 ? "TOP TIER MATERIAL" : totalChance >= 60 ? "STRONG CANDIDATE" : "KEEP WORKING";
-        document.getElementById('chance-percent').style.color = totalChance >= 85 ? "#34a853" : totalChance >= 60 ? "#1a73e8" : "#ea4335";
     }
 
     function resetTo1424(isInit = false) {
@@ -190,7 +190,7 @@
     }
 
     function saveData() {
-        db.ref('mason_v148').set(state);
+        db.ref('mason_v149').set(state);
         updateUI();
     }
 
