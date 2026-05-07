@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.5.2</title>
+    <title>Mason's Victory Roadmap v1.5.3</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,8 +17,8 @@
         .btn-secondary { background-color: #e8f0fe; color: #1a73e8; }
         .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; }
         .check-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; text-align: left; }
-        input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; accent-color: #1a73e8; }
-        .check-label { font-size: 0.85rem; color: #444; flex: 1; }
+        input[type="checkbox"] { width: 22px; height: 22px; margin-right: 12px; accent-color: #1a73e8; }
+        .check-label { font-size: 0.9rem; color: #333; flex: 1; font-weight: 500; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 300px; text-align: center; }
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
@@ -45,12 +45,12 @@
     </div>
 
     <div class="card" style="text-align: left;">
-        <div style="font-size: 1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 12px; text-align: center;">⚡ Passion Project: SoundBuddy</div>
-        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1" class="check-label">Complete SoundBuddy App (+5%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2" class="check-label">Participate Science Competition (+10%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Award Science Competition (+30%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Contact professional mentor (+5%)</label></div>
-        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with mentor (+30%)</label></div>
+        <div style="font-size: 1.1rem; font-weight: bold; color: #1e3a8a; margin-bottom: 15px; text-align: center; letter-spacing: -0.5px;">⚡ SoundBuddy Milestone</div>
+        <div class="check-item"><input type="checkbox" id="p1" onchange="updateProject()"><label for="p1" class="check-label">Sound Buddy Sound Samples (+20%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p2" onchange="updateProject()"><label for="p2" class="check-label">Clinical Trial (+20%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p3" onchange="updateProject()"><label for="p3" class="check-label">Ready for Regional Competition (+10%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p4" onchange="updateProject()"><label for="p4" class="check-label">Ready for DVSF (+30%)</label></div>
+        <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Ready for ISEF (+20%)</label></div>
     </div>
 
     <button class="reset-btn" onclick="resetScore(1494)">Admin: Reset to 1494</button>
@@ -97,7 +97,7 @@
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_v152').once('value');
+        const snapshot = await db.ref('mason_v153').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
             if(!state.history) state.history = [];
@@ -113,7 +113,7 @@
         const today = new Date().toDateString();
         if (today !== state.lastUpdateDay) {
             if (!state.didCheckIn) {
-                state.score -= 40; // 미수행 패널티 강화
+                state.score -= 40;
                 recordHistory(-40);
             }
             state.lastUpdateDay = today;
@@ -156,7 +156,7 @@
         const nMath = answers.newMath;
         const nEla = answers.newEla;
 
-        // 신규 점수 시스템 로직
+        // v1.5.2 점수 로직 그대로 유지
         if (!mMath && !mEla && nMath === 0 && nEla === 0) {
             change = -40;
         } else if ((mMath && !mEla && nMath === 0 && nEla === 0) || (!mMath && mEla && nMath === 0 && nEla === 0)) {
@@ -180,7 +180,7 @@
         recordHistory(change);
         saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(`Points: ${change}`);
+        alert(`Today's Change: ${change > 0 ? '+' : ''}${change}`);
     }
 
     function recordHistory(change) {
@@ -215,13 +215,13 @@
     }
 
     function resetScore(val, isInit=false) {
-        if(!isInit && !confirm("Reset?")) return;
+        if(!isInit && !confirm("Reset scores and projects?")) return;
         state = { score: val, history: [{date: 'Start', score: val}], lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
         saveData();
     }
 
     function saveData() {
-        db.ref('mason_v152').set(state);
+        db.ref('mason_v153').set(state);
         updateUI();
     }
 
@@ -229,9 +229,11 @@
         document.getElementById('sat-score').innerText = state.score;
         document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         
+        // Admission Chance 계산 (SAT 포인트 + 프로젝트 가중치 합산)
         let satPoints = state.score >= 1550 ? 50 : state.score > 1450 ? (state.score - 1450) * 0.5 : 0;
+        
         let projPoints = 0;
-        const weights = [5, 10, 30, 5, 30];
+        const weights = [20, 20, 10, 30, 20]; // 수정된 프로젝트 가중치 (합계 100)
         for(let i=0; i<5; i++) {
             const el = document.getElementById(`p${i+1}`);
             if(el) {
@@ -239,6 +241,9 @@
                 if(state.project[i]) projPoints += weights[i];
             }
         }
+
+        // SAT 점수(최대 50) + 프로젝트(최대 100)를 합산하여 최종 100% 캡씌우기
+        // 이제 프로젝트 성공 시 SAT 점수가 조금 낮아도 합격률이 대폭 올라갑니다.
         const total = Math.min(100, Math.round(satPoints + projPoints));
         document.getElementById('chance-percent').innerText = `${total}%`;
         document.getElementById('chance-level').innerText = total >= 85 ? "TOP TIER MATERIAL" : total >= 60 ? "STRONG CANDIDATE" : "KEEP WORKING";
