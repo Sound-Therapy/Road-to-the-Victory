@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.4.9</title>
+    <title>Mason's Victory Roadmap v1.5.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -11,8 +11,10 @@
         .app-container { width: 100%; max-width: 420px; text-align: center; }
         .card { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 15px; }
         .score-value { font-size: 5rem; font-weight: 900; color: #1a73e8; margin: 5px 0; letter-spacing: -2px; line-height: 1; }
-        .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        .btn { width: 100%; padding: 18px; margin: 8px 0; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
         .btn-primary { background-color: #1a73e8; color: white; }
+        .btn-secondary { background-color: #e8f0fe; color: #1a73e8; }
         .chance-value { font-size: 3.5rem; font-weight: 800; color: #34a853; line-height: 1; }
         .check-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f1f1; text-align: left; }
         input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; accent-color: #1a73e8; }
@@ -20,7 +22,8 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 300px; text-align: center; }
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
-        .reset-btn { font-size: 0.6rem; color: #ccc; cursor: pointer; margin-top: 20px; background: none; border: none; text-decoration: underline; }
+        .admin-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 5px; }
+        .reset-btn { font-size: 0.7rem; color: #bbb; cursor: pointer; background: none; border: none; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -31,6 +34,7 @@
         <div style="font-size: 1rem; font-weight: 600; color: #444; margin-top: 5px;">Mason's SAT Level 🚀</div>
         <div id="sat-score" class="score-value">----</div>
         <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
+        <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 12px;" onclick="alert('Graph feature coming soon in v1.6!')">📊 View Performance Graph</button>
     </div>
 
     <div class="card">
@@ -48,20 +52,22 @@
         <div class="check-item"><input type="checkbox" id="p5" onchange="updateProject()"><label for="p5" class="check-label">Collaboration with mentor (+30%)</label></div>
     </div>
 
-    <button class="reset-btn" onclick="resetTo1424()">Admin: Reset to 1424</button>
+    <div class="admin-controls">
+        <button class="reset-btn" onclick="resetScore(1494)">Admin: Reset to 1494 (Test)</button>
+    </div>
 </div>
 
 <div id="prepModal" class="modal">
     <div class="modal-content">
-        <h2 id="modal-title" style="color: #1a73e8; margin-bottom: 10px;">Step</h2>
-        <p id="question-display" style="font-size: 1.1rem; line-height: 1.4;"></p>
+        <h2 id="modal-title" style="color: #1a73e8; margin-bottom: 10px; font-size: 1.2rem;">SAT Daily Mission</h2>
+        <p id="question-display" style="font-size: 1.1rem; line-height: 1.4; font-weight: 500;"></p>
         <div id="binary-choice" style="display: flex; gap: 10px; margin-top: 20px;">
             <button class="btn btn-primary" style="flex:1;" onclick="handleBinary(true)">Yes</button>
             <button class="btn" style="flex:1; background:#f1f1f1;" onclick="handleBinary(false)">No</button>
         </div>
         <div id="number-choice" style="display:none;">
-            <input type="number" id="set-count" class="input-set" placeholder="How many?">
-            <button class="btn btn-primary" onclick="handleNumber()">Next</button>
+            <input type="number" id="extra-count" class="input-set" placeholder="How many?">
+            <button class="btn btn-primary" onclick="handleNumber()">Finish</button>
         </div>
     </div>
 </div>
@@ -80,25 +86,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let state = { score: 1424, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
+    let state = { score: 1494, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
     let currentStep = 0;
-    let sessionPoints = 0;
+    
+    // 세션 임시 데이터
+    let sessionData = { mastery: 0, newMath: false, newELA: false, extra: 0 };
 
     const flow = [
-        { id: 'math_m', q: "Did you do mastery challenge for math?", type: "binary" },
-        { id: 'math_s', q: "How many math sets did you do today?", type: "number" },
-        { id: 'ela_m', q: "Did you do mastery challenge for SAT R&W?", type: "binary" },
-        { id: 'ela_s', q: "How many R&W sets did you do today?", type: "number" },
-        { id: 'workout', q: "Did you do push ups and squats? 💪", type: "binary", p: 1 }
+        { id: 'mastery', q: "Did you complete 2 Mastery Challenges?", type: "binary" }, // 1단계: 매스터리 여부
+        { id: 'math_n', q: "Did you finish a New Math Unit?", type: "binary" },        // 2단계: 수학 새 유닛
+        { id: 'ela_n', q: "Did you finish a New ELA Unit?", type: "binary" },         // 3단계: 영어 새 유닛
+        { id: 'extra', q: "Any more additional units finished?", type: "number" }      // 4단계: 추가 유닛 개수
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_v149').once('value');
+        const snapshot = await db.ref('mason_v150').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
             checkDailyGap();
         } else {
-            resetTo1424(true);
+            resetScore(1494, true);
         }
         updateUI();
     }
@@ -106,9 +113,11 @@
     function checkDailyGap() {
         const today = new Date().toDateString();
         if (today !== state.lastUpdateDay) {
-            const lastDate = new Date(state.lastUpdateDay);
-            const diffDays = Math.floor(Math.abs(new Date(today) - lastDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 1 && !state.didCheckIn) { state.score -= 5; }
+            // 자정이 지나 접속했을 때, 전날 체크인을 안 했다면 자동으로 -20점 패널티
+            if (!state.didCheckIn) { 
+                state.score -= 20; 
+                saveData();
+            }
             state.lastUpdateDay = today;
             state.didCheckIn = false;
             saveData();
@@ -116,8 +125,9 @@
     }
 
     function startPrep() {
-        if (state.didCheckIn) return alert("Already updated for today!");
-        currentStep = 0; sessionPoints = 0;
+        if (state.didCheckIn) return alert("You already conquered today's mission!");
+        currentStep = 0; 
+        sessionData = { mastery: 0, newMath: false, newELA: false, extra: 0 };
         showStep();
         document.getElementById('prepModal').style.display = 'flex';
     }
@@ -127,41 +137,62 @@
         document.getElementById('question-display').innerText = item.q;
         document.getElementById('binary-choice').style.display = item.type === "binary" ? "flex" : "none";
         document.getElementById('number-choice').style.display = item.type === "number" ? "block" : "none";
-        if(item.type === "number") document.getElementById('set-count').value = "";
+        if(item.type === "number") document.getElementById('extra-count').value = "";
     }
 
     function handleBinary(isYes) {
         const currentId = flow[currentStep].id;
         
-        if (isYes) {
-            sessionPoints += 1;
-            currentStep++;
-        } else {
-            // No를 선택했을 때의 분기
-            if (currentId === 'math_m') {
-                currentStep = 2; // Math 세트 건너뛰고 ELA Mastery로
-            } else if (currentId === 'ela_m') {
-                currentStep = 4; // ELA 세트 건너뛰고 바로 운동 질문으로
-            } else if (currentId === 'workout') {
-                currentStep++; // 그냥 다음(종료)으로
+        if (currentId === 'mastery') {
+            if (isYes) {
+                sessionData.mastery = 2; // Yes 누르면 2개 한 것으로 간주 (0점 확보)
+                currentStep++;
+            } else {
+                // Mastery 2개 안 했을 경우 추가 질문 없이 바로 패널티 계산
+                // Mastery 하나만 했는지 다시 확인 (로직 정교화)
+                if(confirm("Did you at least finish ONE Mastery?")) {
+                    finishWithScore(-10);
+                } else {
+                    finishWithScore(-20);
+                }
+                return;
             }
+        } else if (currentId === 'math_n') {
+            sessionData.newMath = isYes;
+            currentStep++;
+        } else if (currentId === 'ela_n') {
+            sessionData.newELA = isYes;
+            currentStep++;
         }
-        
-        if (currentStep < flow.length) showStep(); else finish();
+
+        if (currentStep < flow.length) showStep(); else calculateFinal();
     }
 
     function handleNumber() {
-        sessionPoints += (parseInt(document.getElementById('set-count').value) || 0);
-        currentStep++;
-        if (currentStep < flow.length) showStep(); else finish();
+        sessionData.extra = (parseInt(document.getElementById('extra-count').value) || 0);
+        calculateFinal();
     }
 
-    function finish() {
-        state.score += sessionPoints;
+    function calculateFinal() {
+        let change = 0;
+        // Mastery 2개를 달성했다는 전제 하에 (위 handleBinary에서 필터링됨)
+        if (sessionData.mastery === 2) {
+            if (sessionData.newMath && sessionData.newELA) change = 20;
+            else if (sessionData.newMath || sessionData.newELA) change = 10;
+            else change = 0;
+            
+            // 추가 유닛당 +10
+            change += (sessionData.extra * 10);
+        }
+        finishWithScore(change);
+    }
+
+    function finishWithScore(points) {
+        state.score += points;
         state.didCheckIn = true;
         saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(`Finished! You earned ${sessionPoints} points today.`);
+        alert(`Today's Performance: ${points > 0 ? '+' : ''}${points} points!`);
     }
 
     function updateProject() {
@@ -183,14 +214,14 @@
         document.getElementById('chance-level').innerText = totalChance >= 85 ? "TOP TIER MATERIAL" : totalChance >= 60 ? "STRONG CANDIDATE" : "KEEP WORKING";
     }
 
-    function resetTo1424(isInit = false) {
-        if(!isInit && !confirm("Reset all to 1424?")) return;
-        state = { score: 1424, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
+    function resetScore(targetScore, isInit = false) {
+        if(!isInit && !confirm(`Reset score to ${targetScore}?`)) return;
+        state = { score: targetScore, lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
         saveData();
     }
 
     function saveData() {
-        db.ref('mason_v149').set(state);
+        db.ref('mason_v150').set(state);
         updateUI();
     }
 
