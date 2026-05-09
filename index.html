@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mason's Victory Roadmap v1.5.5</title>
+    <title>Mason's Victory Roadmap v1.5.6</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,13 +24,15 @@
         .input-set { width: 100%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 2px solid #1a73e8; font-size: 1.2rem; text-align: center; box-sizing: border-box; }
         #chartContainer { width: 100%; height: 250px; margin-top: 10px; display: none; }
         .reset-btn { font-size: 0.7rem; color: #bbb; cursor: pointer; background: none; border: none; margin-top: 10px; }
+        .dday-badge { background: #fee2e2; color: #dc2626; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; display: inline-block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="card">
-        <div style="font-size: 0.8rem; color: #888;" id="display-date">Loading...</div>
+        <!-- 기존 날짜 대신 DVSF D-Day 배치 -->
+        <div id="dday-display" class="dday-badge">DVSF D-Day Calculating...</div>
         <div style="font-size: 1rem; font-weight: 600; color: #444; margin-top: 5px;">Mason's SAT Level 🚀</div>
         <div id="sat-score" class="score-value">----</div>
         <button class="btn btn-primary" onclick="startPrep()">SAT Prep Start</button>
@@ -56,6 +58,7 @@
     <button class="reset-btn" onclick="resetScore(1500)">Admin: Reset to 1500</button>
 </div>
 
+<!-- Modal 및 기타 구조 유지 -->
 <div id="prepModal" class="modal">
     <div class="modal-content">
         <h2 style="color: #1a73e8; margin-bottom: 10px; font-size: 1.2rem;">Daily Mission</h2>
@@ -97,7 +100,7 @@
     ];
 
     async function loadData() {
-        const snapshot = await db.ref('mason_v155').once('value');
+        const snapshot = await db.ref('mason_v156').once('value');
         if (snapshot.exists()) {
             state = snapshot.val();
             if(!state.history) state.history = [];
@@ -113,7 +116,7 @@
         const today = new Date().toDateString();
         if (today !== state.lastUpdateDay) {
             if (!state.didCheckIn) {
-                state.score -= 4; // 업데이트 안했을 때 -4점
+                state.score -= 4;
                 recordHistory(-4);
             }
             state.lastUpdateDay = today;
@@ -122,10 +125,18 @@
         }
     }
 
+    // D-Day 계산 함수
+    function calculateDDay() {
+        const targetDate = new Date('2027-04-07');
+        const today = new Date();
+        const diff = targetDate - today;
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        return days >= 0 ? `DVSF D-${days}` : `DVSF D+${Math.abs(days)}`;
+    }
+
     function startPrep() {
         if (state.didCheckIn) return alert("Checked in already!");
-        currentStep = 0;
-        showStep();
+        currentStep = 0; showStep();
         document.getElementById('prepModal').style.display = 'flex';
     }
 
@@ -138,8 +149,7 @@
     }
 
     function handleBinary(isYes) {
-        answers[questions[currentStep].id] = isYes;
-        currentStep++;
+        answers[questions[currentStep].id] = isYes; currentStep++;
         if (currentStep < questions.length) showStep(); else finishCalc();
     }
 
@@ -151,35 +161,21 @@
 
     function finishCalc() {
         let change = 0;
-        const mMath = answers.mathM, mEla = answers.elaM;
-        const nMath = answers.newMath, nEla = answers.newEla;
-
-        // v1.5.5 새로운 점수 체계
-        if (!mMath && !mEla && nMath === 0 && nEla === 0) {
-            change = -4; // 아무것도 안했을 경우
-        } else if ((mMath && !mEla && nMath === 0 && nEla === 0) || (!mMath && mEla && nMath === 0 && nEla === 0)) {
-            change = -2; // 매스터리 하나만
-        } else if (mMath && mEla && nMath === 0 && nEla === 0) {
-            change = 0;  // 매스터리 두개만
-        } else if (mMath && !mEla && nMath === 1 && nEla === 0) {
-            change = 2;  // 매스터리 수학 + 신규 수학 유닛 1개
-        } else if (!mMath && mEla && nMath === 0 && nEla === 1) {
-            change = 2;  // 매스터리 영어 + 신규 영어 유닛 1개
-        } else if (mMath && mEla && nMath === 1 && nEla === 0) {
-            change = 3;  // 매스터리 영/수 + 신규 수학 유닛 1개
-        } else if (mMath && mEla && nMath === 0 && nEla === 1) {
-            change = 3;  // 매스터리 영/수 + 신규 영어 유닛 1개
-        } else if (mMath && mEla && nMath >= 1 && nEla >= 1) {
-            // 매스터리 2개 + 신규 수학/영어 유닛 각각 1개 이상
+        const mMath = answers.mathM, mEla = answers.elaM, nMath = answers.newMath, nEla = answers.newEla;
+        if (!mMath && !mEla && nMath === 0 && nEla === 0) change = -4;
+        else if ((mMath && !mEla && nMath === 0 && nEla === 0) || (!mMath && mEla && nMath === 0 && nEla === 0)) change = -2;
+        else if (mMath && mEla && nMath === 0 && nEla === 0) change = 0;
+        else if (mMath && !mEla && nMath === 1 && nEla === 0) change = 2;
+        else if (!mMath && mEla && nMath === 0 && nEla === 1) change = 2;
+        else if (mMath && mEla && nMath === 1 && nEla === 0) change = 3;
+        else if (mMath && mEla && nMath === 0 && nEla === 1) change = 3;
+        else if (mMath && mEla && nMath >= 1 && nEla >= 1) {
             change = 4 + (Math.max(0, (nMath + nEla) - 2) * 1);
         }
-
-        state.score += change;
-        state.didCheckIn = true;
-        recordHistory(change);
-        saveData();
+        state.score += change; state.didCheckIn = true;
+        recordHistory(change); saveData();
         document.getElementById('prepModal').style.display = 'none';
-        alert(`Points Earned: ${change > 0 ? '+' : ''}${change}`);
+        alert(`Points: ${change}`);
     }
 
     function recordHistory(change) {
@@ -214,29 +210,22 @@
     }
 
     function resetScore(val, isInit=false) {
-        if(!isInit && !confirm("Reset scores to " + val + "?")) return;
+        if(!isInit && !confirm("Reset scores?")) return;
         state = { score: val, history: [{date: 'Start', score: val}], lastUpdateDay: new Date().toDateString(), didCheckIn: false, project: [false,false,false,false,false] };
         saveData();
     }
 
-    function saveData() {
-        db.ref('mason_v155').set(state);
-        updateUI();
-    }
+    function saveData() { db.ref('mason_v156').set(state); updateUI(); }
 
     function updateUI() {
         document.getElementById('sat-score').innerText = state.score;
-        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        
+        document.getElementById('dday-display').innerText = calculateDDay(); // D-Day 업데이트
         let satPoints = state.score >= 1550 ? 50 : state.score > 1450 ? (state.score - 1450) * 0.5 : 0;
         let projPoints = 0;
         const weights = [10, 10, 10, 30, 40];
         for(let i=0; i<5; i++) {
             const el = document.getElementById(`p${i+1}`);
-            if(el) {
-                el.checked = state.project[i];
-                if(state.project[i]) projPoints += weights[i];
-            }
+            if(el) { el.checked = state.project[i]; if(state.project[i]) projPoints += weights[i]; }
         }
         const total = Math.min(100, Math.round(satPoints + projPoints));
         document.getElementById('chance-percent').innerText = `${total}%`;
